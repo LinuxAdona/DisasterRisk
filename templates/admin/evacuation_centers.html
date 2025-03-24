@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Evacuation Centers - Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1>Evacuation Centers</h1>
+    </div>
+    <div class="col-md-6 text-end">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCenterModal">
+            <i class="fas fa-plus-circle me-2"></i>Add Evacuation Center
+        </button>
+    </div>
+</div>
+
+{% if center %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>
+    You are editing the evacuation center: <strong>{{ center.name }}</strong>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header bg-primary bg-opacity-25">
+        <h5 class="mb-0">Evacuation Centers</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped" id="centersTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>Contact</th>
+                        <th>Capacity</th>
+                        <th>Occupancy</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for center in centers %}
+                    <tr>
+                        <td>{{ center.name }}</td>
+                        <td>{{ center.address }}</td>
+                        <td>{{ center.contact }}</td>
+                        <td>{{ center.capacity }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1 me-2">
+                                    <div class="progress-bar {% if center.occupancy_percentage > 80 %}bg-danger{% elif center.occupancy_percentage > 50 %}bg-warning{% else %}bg-success{% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ center.occupancy_percentage }}%;" 
+                                        aria-valuenow="{{ center.occupancy_percentage }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100"></div>
+                                </div>
+                                <span>{{ center.current_occupancy }}/{{ center.capacity }} ({{ center.occupancy_percentage }}%)</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge {% if center.active %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ 'Active' if center.active else 'Inactive' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('admin.edit_evacuation_center', center_id=center.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <button class="btn btn-sm {% if center.active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" 
+                                        onclick="toggleCenterStatus('{{ center.id }}', {{ 'false' if center.active else 'true' }})">
+                                    {% if center.active %}
+                                        <i class="fas fa-times-circle"></i> Deactivate
+                                    {% else %}
+                                        <i class="fas fa-check-circle"></i> Activate
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Evacuation Center Modal -->
+<div class="modal fade" id="addCenterModal" tabindex="-1" aria-labelledby="addCenterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary bg-opacity-25">
+                <h5 class="modal-title" id="addCenterModalLabel">Add Evacuation Center</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('admin.add_evacuation_center') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">{{ form.name.label }}</label>
+                        {{ form.name(class="form-control", id="name", placeholder="Enter center name") }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="address" class="form-label">{{ form.address.label }}</label>
+                        {{ form.address(class="form-control", id="address", placeholder="Enter center address", rows=3) }}
+                        {% if form.address.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.address.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="capacity" class="form-label">{{ form.capacity.label }}</label>
+                            {{ form.capacity(class="form-control", id="capacity", placeholder="Enter center capacity") }}
+                            {% if form.capacity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.capacity.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="contact" class="form-label">{{ form.contact.label }}</label>
+                            {{ form.contact(class="form-control", id="contact", placeholder="Enter contact information") }}
+                            {% if form.contact.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.contact.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form.active(class="form-check-input", id="active") }}
+                        <label class="form-check-label" for="active">
+                            {{ form.active.label }}
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Evacuation Center
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Evacuation Center Form (if editing) -->
+{% if center %}
+<div class="card mb-4">
+    <div class="card-header bg-primary bg-opacity-25">
+        <h5 class="mb-0">Edit Evacuation Center</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.edit_evacuation_center', center_id=center.id) }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="mb-3">
+                <label for="name" class="form-label">{{ form.name.label }}</label>
+                {{ form.name(class="form-control", id="name", placeholder="Enter center name") }}
+                {% if form.name.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.name.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="address" class="form-label">{{ form.address.label }}</label>
+                {{ form.address(class="form-control", id="address", placeholder="Enter center address", rows=3) }}
+                {% if form.address.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.address.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="capacity" class="form-label">{{ form.capacity.label }}</label>
+                    {{ form.capacity(class="form-control", id="capacity", placeholder="Enter center capacity") }}
+                    {% if form.capacity.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.capacity.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="contact" class="form-label">{{ form.contact.label }}</label>
+                    {{ form.contact(class="form-control", id="contact", placeholder="Enter contact information") }}
+                    {% if form.contact.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.contact.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mb-3 form-check">
+                {{ form.active(class="form-check-input", id="active") }}
+                <label class="form-check-label" for="active">
+                    {{ form.active.label }}
+                </label>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Update Evacuation Center
+                </button>
+                <a href="{{ url_for('admin.evacuation_centers') }}" class="btn btn-secondary">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/datatables-config.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTable
+        $('#centersTable').DataTable({
+            responsive: true,
+            order: [[5, 'desc'], [0, 'asc']]
+        });
+    });
+    
+    function toggleCenterStatus(centerId, active) {
+        // This would ideally be an AJAX request, but for simplicity in this MVP,
+        // we'll simulate the update by redirecting to edit with a status parameter
+        window.location.href = `/admin/evacuation-centers/${centerId}/edit?active=${active}`;
+    }
+</script>
+{% endblock %}

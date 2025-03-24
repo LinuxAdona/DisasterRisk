@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Disaster Risk Information Management System{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary bg-opacity-25">
+                <h3 class="mb-0">Register</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('auth.register') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">{{ form.username.label }}</label>
+                        {{ form.username(class="form-control", id="username", placeholder="Choose a username") }}
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">{{ form.email.label }}</label>
+                        {{ form.email(class="form-control", id="email", placeholder="Enter your email") }}
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">{{ form.password.label }}</label>
+                        {{ form.password(class="form-control", id="password", placeholder="Choose a password") }}
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">{{ form.confirm_password.label }}</label>
+                        {{ form.confirm_password(class="form-control", id="confirm_password", placeholder="Confirm password") }}
+                        {% if form.confirm_password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.confirm_password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="role" class="form-label">{{ form.role.label }}</label>
+                        {{ form.role(class="form-select", id="role") }}
+                        {% if form.role.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.role.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Your account will require administrator approval before you can log in.
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Register
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <p class="mb-0">Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

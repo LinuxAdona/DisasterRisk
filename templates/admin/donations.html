@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}Donations - Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1>Donations</h1>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary bg-opacity-25">
+        <h5 class="mb-0">Donation Management</h5>
+    </div>
+    <div class="card-body">
+        <ul class="nav nav-tabs mb-3" id="donationsTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="true">
+                    Pending
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="received-tab" data-bs-toggle="tab" data-bs-target="#received" type="button" role="tab" aria-controls="received" aria-selected="false">
+                    Received
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="distributed-tab" data-bs-toggle="tab" data-bs-target="#distributed" type="button" role="tab" aria-controls="distributed" aria-selected="false">
+                    Distributed
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="expired-tab" data-bs-toggle="tab" data-bs-target="#expired" type="button" role="tab" aria-controls="expired" aria-selected="false">
+                    Expired
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="donationsTabContent">
+            <!-- Pending Donations Tab -->
+            <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped datatable">
+                        <thead>
+                            <tr>
+                                <th>Donor</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Evacuation Center</th>
+                                <th>Date Donated</th>
+                                <th>Expiry Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donation in donations if donation.status == 'pending' %}
+                            <tr>
+                                <td>{{ donation.donor.username if donation.donor else 'Anonymous' }}</td>
+                                <td>{{ donation.type.capitalize() }}</td>
+                                <td>{{ donation.description }}</td>
+                                <td>{{ donation.quantity }}</td>
+                                <td>{{ donation.center.name if donation.center else 'N/A' }}</td>
+                                <td>{{ donation.created_at|format_date }}</td>
+                                <td>
+                                    {% if donation.expiry_date %}
+                                        {{ donation.expiry_date|format_date }}
+                                        {% if donation.is_expiring_soon %}
+                                            <span class="badge bg-warning">Expiring Soon</span>
+                                        {% endif %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('admin.update_donation_status') }}">
+                                        {{ form.hidden_tag() if form else '' }}
+                                        <input type="hidden" name="donation_id" value="{{ donation.id }}">
+                                        <div class="btn-group">
+                                            <button type="submit" name="status" value="received" class="btn btn-sm btn-success">
+                                                <i class="fas fa-check-circle"></i> Receive
+                                            </button>
+                                            <button type="submit" name="status" value="expired" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-times-circle"></i> Reject
+                                            </button>
+                                        </div>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center">No pending donations found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Received Donations Tab -->
+            <div class="tab-pane fade" id="received" role="tabpanel" aria-labelledby="received-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped datatable">
+                        <thead>
+                            <tr>
+                                <th>Donor</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Evacuation Center</th>
+                                <th>Date Received</th>
+                                <th>Expiry Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donation in donations if donation.status == 'received' %}
+                            <tr>
+                                <td>{{ donation.donor.username if donation.donor else 'Anonymous' }}</td>
+                                <td>{{ donation.type.capitalize() }}</td>
+                                <td>{{ donation.description }}</td>
+                                <td>{{ donation.quantity }}</td>
+                                <td>{{ donation.center.name if donation.center else 'N/A' }}</td>
+                                <td>{{ donation.received_at|format_date }}</td>
+                                <td>
+                                    {% if donation.expiry_date %}
+                                        {{ donation.expiry_date|format_date }}
+                                        {% if donation.is_expiring_soon %}
+                                            <span class="badge bg-warning">Expiring Soon</span>
+                                        {% endif %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('admin.update_donation_status') }}">
+                                        {{ form.hidden_tag() if form else '' }}
+                                        <input type="hidden" name="donation_id" value="{{ donation.id }}">
+                                        <button type="submit" name="status" value="distributed" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-box-open"></i> Distribute
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center">No received donations found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Distributed Donations Tab -->
+            <div class="tab-pane fade" id="distributed" role="tabpanel" aria-labelledby="distributed-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped datatable">
+                        <thead>
+                            <tr>
+                                <th>Donor</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Evacuation Center</th>
+                                <th>Date Distributed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donation in donations if donation.status == 'distributed' %}
+                            <tr>
+                                <td>{{ donation.donor.username if donation.donor else 'Anonymous' }}</td>
+                                <td>{{ donation.type.capitalize() }}</td>
+                                <td>{{ donation.description }}</td>
+                                <td>{{ donation.quantity }}</td>
+                                <td>{{ donation.center.name if donation.center else 'N/A' }}</td>
+                                <td>{{ donation.distributed_at|format_date }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">No distributed donations found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Expired Donations Tab -->
+            <div class="tab-pane fade" id="expired" role="tabpanel" aria-labelledby="expired-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped datatable">
+                        <thead>
+                            <tr>
+                                <th>Donor</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Evacuation Center</th>
+                                <th>Date Donated</th>
+                                <th>Expiry Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donation in donations if donation.status == 'expired' %}
+                            <tr>
+                                <td>{{ donation.donor.username if donation.donor else 'Anonymous' }}</td>
+                                <td>{{ donation.type.capitalize() }}</td>
+                                <td>{{ donation.description }}</td>
+                                <td>{{ donation.quantity }}</td>
+                                <td>{{ donation.center.name if donation.center else 'N/A' }}</td>
+                                <td>{{ donation.created_at|format_date }}</td>
+                                <td>{{ donation.expiry_date|format_date if donation.expiry_date else 'N/A' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center">No expired donations found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-warning bg-opacity-25">
+        <h5 class="mb-0">Expiring Soon</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Evacuation Center</th>
+                        <th>Expiry Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set expiring_donations = [] %}
+                    {% for donation in donations %}
+                        {% if donation.expiry_date and donation.is_expiring_soon and donation.status in ['pending', 'received'] %}
+                            {% do expiring_donations.append(donation) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% for donation in expiring_donations %}
+                    <tr>
+                        <td>{{ donation.type.capitalize() }}</td>
+                        <td>{{ donation.description }}</td>
+                        <td>{{ donation.quantity }}</td>
+                        <td>{{ donation.center.name if donation.center else 'N/A' }}</td>
+                        <td>{{ donation.expiry_date|format_date }}</td>
+                        <td>{{ donation.status.capitalize() }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.update_donation_status') }}">
+                                {{ form.hidden_tag() if form else '' }}
+                                <input type="hidden" name="donation_id" value="{{ donation.id }}">
+                                <div class="btn-group">
+                                    {% if donation.status == 'pending' %}
+                                        <button type="submit" name="status" value="received" class="btn btn-sm btn-success">
+                                            <i class="fas fa-check-circle"></i> Receive
+                                        </button>
+                                    {% elif donation.status == 'received' %}
+                                        <button type="submit" name="status" value="distributed" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-box-open"></i> Distribute
+                                        </button>
+                                    {% endif %}
+                                    <button type="submit" name="status" value="expired" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-times-circle"></i> Mark Expired
+                                    </button>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">No donations expiring soon.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/datatables-config.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTables
+        $('.datatable').DataTable({
+            responsive: true,
+            order: [[5, 'desc']]
+        });
+        
+        // Keep the active tab after form submission
+        const activeTabId = sessionStorage.getItem('activeTab');
+        if (activeTabId) {
+            const activeTab = document.querySelector(`#donationsTab button[data-bs-target="${activeTabId}"]`);
+            if (activeTab) {
+                const tabTrigger = new bootstrap.Tab(activeTab);
+                tabTrigger.show();
+            }
+        }
+        
+        // Save active tab when changed
+        const tabButtons = document.querySelectorAll('#donationsTab button');
+        tabButtons.forEach(button => {
+            button.addEventListener('shown.bs.tab', function (event) {
+                sessionStorage.setItem('activeTab', event.target.getAttribute('data-bs-target'));
+            });
+        });
+    });
+</script>
+{% endblock %}

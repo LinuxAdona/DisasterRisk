@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Disaster Risk Information Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Admin Dashboard</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary bg-opacity-10 h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-building fa-3x mb-3"></i>
+                <h2 class="display-5">{{ active_centers }}</h2>
+                <h5>Active Evacuation Centers</h5>
+                <a href="{{ url_for('admin.evacuation_centers') }}" class="btn btn-outline-primary mt-2">Manage</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info bg-opacity-10 h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x mb-3"></i>
+                <h2 class="display-5">{{ total_evacuees }}</h2>
+                <h5>Active Evacuees</h5>
+                <a href="{{ url_for('admin.evacuees') }}" class="btn btn-outline-info mt-2">Manage</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success bg-opacity-10 h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-box-open fa-3x mb-3"></i>
+                <h2 class="display-5">{{ pending_donations }}</h2>
+                <h5>Pending Donations</h5>
+                <a href="{{ url_for('admin.donations') }}" class="btn btn-outline-success mt-2">Manage</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning bg-opacity-10 h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-user-clock fa-3x mb-3"></i>
+                <h2 class="display-5">{{ pending_users }}</h2>
+                <h5>Pending User Approvals</h5>
+                <a href="{{ url_for('admin.users') }}" class="btn btn-outline-warning mt-2">Manage</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary bg-opacity-25">
+                <h5 class="mb-0">Evacuation Center Occupancy</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="evacuationCenterChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info bg-opacity-25">
+                <h5 class="mb-0">Evacuee Demographics</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="evacueeChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success bg-opacity-25">
+                <h5 class="mb-0">Donation Categories</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="donationChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning bg-opacity-25">
+                <h5 class="mb-0">Evacuee Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="evacueeStatusChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger bg-opacity-25">
+                <h5 class="mb-0">High Occupancy Centers <span class="badge bg-danger">Action Needed</span></h5>
+            </div>
+            <div class="card-body">
+                {% if high_occupancy_centers %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Center Name</th>
+                                    <th>Occupancy</th>
+                                    <th>Capacity</th>
+                                    <th>Percentage</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for center in high_occupancy_centers %}
+                                    <tr>
+                                        <td>{{ center.name }}</td>
+                                        <td>{{ center.current_occupancy }}</td>
+                                        <td>{{ center.capacity }}</td>
+                                        <td>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-danger" role="progressbar" style="width: {{ center.occupancy_percentage }}%;" aria-valuenow="{{ center.occupancy_percentage }}" aria-valuemin="0" aria-valuemax="100">{{ center.occupancy_percentage }}%</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('admin.edit_evacuation_center', center_id=center.id) }}" class="btn btn-sm btn-outline-primary">Manage</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        All evacuation centers are below 80% occupancy.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning bg-opacity-25">
+                <h5 class="mb-0">Expiring Donations <span class="badge bg-warning">Action Needed</span></h5>
+            </div>
+            <div class="card-body">
+                {% if expiring_donations %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Quantity</th>
+                                    <th>Expiry Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for donation in expiring_donations %}
+                                    <tr>
+                                        <td>{{ donation.type.capitalize() }}</td>
+                                        <td>{{ donation.description }}</td>
+                                        <td>{{ donation.quantity }}</td>
+                                        <td>{{ donation.expiry_date|format_date }}</td>
+                                        <td>
+                                            <form method="POST" action="{{ url_for('admin.update_donation_status') }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <input type="hidden" name="donation_id" value="{{ donation.id }}">
+                                                <input type="hidden" name="status" value="distributed">
+                                                <button type="submit" class="btn btn-sm btn-outline-success">Mark Distributed</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        No donations are expiring soon.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts-config.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fetch evacuation center data
+        fetch('/api/evacuation-centers')
+            .then(response => response.json())
+            .then(data => {
+                const centerNames = data.map(center => center.name);
+                const occupancyData = data.map(center => center.current_occupancy);
+                const capacityData = data.map(center => center.capacity);
+                
+                createEvacuationCenterChart(centerNames, occupancyData, capacityData);
+            });
+        
+        // Fetch evacuee stats
+        fetch('/api/evacuee-stats')
+            .then(response => response.json())
+            .then(data => {
+                createEvacueeDemographicsChart(data);
+                createEvacueeStatusChart(data.status);
+            });
+        
+        // Fetch donation stats
+        fetch('/api/donation-stats')
+            .then(response => response.json())
+            .then(data => {
+                createDonationChart(data.type);
+            });
+    });
+</script>
+{% endblock %}

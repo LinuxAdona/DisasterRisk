@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1>User Management</h1>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary bg-opacity-25">
+        <h5 class="mb-0">Pending Approval Requests</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Registration Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set pending_users = [] %}
+                    {% for user in users %}
+                        {% if not user.approved %}
+                            {% do pending_users.append(user) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% for user in pending_users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.role.capitalize() }}</td>
+                        <td>{{ user.created_at|format_date }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.approve_user') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <div class="btn-group">
+                                    <button type="submit" name="approved" value="true" class="btn btn-sm btn-success">
+                                        <i class="fas fa-check-circle"></i> Approve
+                                    </button>
+                                    <button type="submit" name="approved" value="false" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-times-circle"></i> Reject
+                                    </button>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">No pending approval requests.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary bg-opacity-25">
+        <h5 class="mb-0">Registered Users</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Registration Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.role.capitalize() }}</td>
+                        <td>{{ user.created_at|format_date }}</td>
+                        <td>
+                            <span class="badge {% if user.approved %}bg-success{% else %}bg-warning{% endif %}">
+                                {{ 'Approved' if user.approved else 'Pending' }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if not user.approved %}
+                                <form method="POST" action="{{ url_for('admin.approve_user') }}" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <input type="hidden" name="approved" value="true">
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-check-circle"></i> Approve
+                                    </button>
+                                </form>
+                            {% elif user.role != 'admin' %}
+                                <form method="POST" action="{{ url_for('admin.approve_user') }}" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <input type="hidden" name="approved" value="false">
+                                    <button type="submit" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-ban"></i> Revoke
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-muted">Admin user</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/datatables-config.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTable
+        $('#usersTable').DataTable({
+            responsive: true,
+            order: [[2, 'asc'], [4, 'desc'], [0, 'asc']],
+            columnDefs: [
+                { orderable: false, targets: 5 }
+            ]
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,554 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory - Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1>Inventory Management</h1>
+    </div>
+    <div class="col-md-6 text-end">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+            <i class="fas fa-plus-circle me-2"></i>Add Inventory Item
+        </button>
+    </div>
+</div>
+
+{% if item %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>
+    You are editing inventory item: <strong>{{ item.name }}</strong>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header bg-warning bg-opacity-25">
+        <h5 class="mb-0">Expiring Items</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Type</th>
+                        <th>Quantity</th>
+                        <th>Evacuation Center</th>
+                        <th>Expiry Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set expiring_items = [] %}
+                    {% for item in inventory_items %}
+                        {% if item.expiry_date and item.is_expiring_soon %}
+                            {% do expiring_items.append(item) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% for item in expiring_items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.type.capitalize() }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.center.name if item.center else 'N/A' }}</td>
+                        <td>{{ item.expiry_date|format_date }}</td>
+                        <td>
+                            <a href="{{ url_for('admin.edit_inventory_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">No items expiring soon.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary bg-opacity-25">
+        <h5 class="mb-0">Inventory Items</h5>
+    </div>
+    <div class="card-body">
+        <ul class="nav nav-tabs mb-3" id="inventoryTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="true">
+                    All Items
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="food-tab" data-bs-toggle="tab" data-bs-target="#food" type="button" role="tab" aria-controls="food" aria-selected="false">
+                    Food
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="clothing-tab" data-bs-toggle="tab" data-bs-target="#clothing" type="button" role="tab" aria-controls="clothing" aria-selected="false">
+                    Clothing
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="hygiene-tab" data-bs-toggle="tab" data-bs-target="#hygiene" type="button" role="tab" aria-controls="hygiene" aria-selected="false">
+                    Hygiene
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="medicine-tab" data-bs-toggle="tab" data-bs-target="#medicine" type="button" role="tab" aria-controls="medicine" aria-selected="false">
+                    Medicine
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#other" type="button" role="tab" aria-controls="other" aria-selected="false">
+                    Other
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="inventoryTabContent">
+            <!-- All Items Tab -->
+            <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped datatable">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Evacuation Center</th>
+                                <th>Expiry Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory_items %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.type.capitalize() }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.center.name if item.center else 'N/A' }}</td>
+                                <td>
+                                    {% if item.expiry_date %}
+                                        {{ item.expiry_date|format_date }}
+                                        {% if item.is_expiring_soon %}
+                                            <span class="badge bg-warning">Expiring Soon</span>
+                                        {% endif %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('admin.edit_inventory_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">No inventory items found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Food Tab -->
+            <div class="tab-pane fade" id="food" role="tabpanel" aria-labelledby="food-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped datatable">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Quantity</th>
+                                <th>Evacuation Center</th>
+                                <th>Expiry Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory_items if item.type == 'food' %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.center.name if item.center else 'N/A' }}</td>
+                                <td>
+                                    {% if item.expiry_date %}
+                                        {{ item.expiry_date|format_date }}
+                                        {% if item.is_expiring_soon %}
+                                            <span class="badge bg-warning">Expiring Soon</span>
+                                        {% endif %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('admin.edit_inventory_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No food items found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Clothing Tab -->
+            <div class="tab-pane fade" id="clothing" role="tabpanel" aria-labelledby="clothing-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped datatable">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Quantity</th>
+                                <th>Evacuation Center</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory_items if item.type == 'clothing' %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.center.name if item.center else 'N/A' }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin.edit_inventory_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">No clothing items found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Hygiene Tab -->
+            <div class="tab-pane fade" id="hygiene" role="tabpanel" aria-labelledby="hygiene-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped datatable">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Quantity</th>
+                                <th>Evacuation Center</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory_items if item.type == 'hygiene' %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.center.name if item.center else 'N/A' }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin.edit_inventory_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">No hygiene items found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Medicine Tab -->
+            <div class="tab-pane fade" id="medicine" role="tabpanel" aria-labelledby="medicine-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped datatable">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Quantity</th>
+                                <th>Evacuation Center</th>
+                                <th>Expiry Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory_items if item.type == 'medicine' %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.center.name if item.center else 'N/A' }}</td>
+                                <td>
+                                    {% if item.expiry_date %}
+                                        {{ item.expiry_date|format_date }}
+                                        {% if item.is_expiring_soon %}
+                                            <span class="badge bg-warning">Expiring Soon</span>
+                                        {% endif %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('admin.edit_inventory_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No medicine items found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Other Tab -->
+            <div class="tab-pane fade" id="other" role="tabpanel" aria-labelledby="other-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped datatable">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Quantity</th>
+                                <th>Evacuation Center</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory_items if item.type == 'other' %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.center.name if item.center else 'N/A' }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin.edit_inventory_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">No other items found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Inventory Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary bg-opacity-25">
+                <h5 class="modal-title" id="addItemModalLabel">Add Inventory Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('admin.add_inventory_item') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">{{ form.name.label }}</label>
+                        {{ form.name(class="form-control", id="name", placeholder="Enter item name") }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="type" class="form-label">{{ form.type.label }}</label>
+                            {{ form.type(class="form-select", id="type") }}
+                            {% if form.type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.type.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="quantity" class="form-label">{{ form.quantity.label }}</label>
+                            {{ form.quantity(class="form-control", id="quantity", placeholder="Enter quantity") }}
+                            {% if form.quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.quantity.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="center_id" class="form-label">{{ form.center_id.label }}</label>
+                            {{ form.center_id(class="form-select", id="center_id") }}
+                            {% if form.center_id.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.center_id.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="expiry_date" class="form-label">{{ form.expiry_date.label }}</label>
+                            {{ form.expiry_date(class="form-control", id="expiry_date", type="date") }}
+                            {% if form.expiry_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.expiry_date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Inventory Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Inventory Item Form (if editing) -->
+{% if item %}
+<div class="card mb-4">
+    <div class="card-header bg-primary bg-opacity-25">
+        <h5 class="mb-0">Edit Inventory Item</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.edit_inventory_item', item_id=item.id) }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="mb-3">
+                <label for="name" class="form-label">{{ form.name.label }}</label>
+                {{ form.name(class="form-control", id="name", placeholder="Enter item name") }}
+                {% if form.name.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.name.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="type" class="form-label">{{ form.type.label }}</label>
+                    {{ form.type(class="form-select", id="type") }}
+                    {% if form.type.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.type.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="quantity" class="form-label">{{ form.quantity.label }}</label>
+                    {{ form.quantity(class="form-control", id="quantity", placeholder="Enter quantity") }}
+                    {% if form.quantity.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.quantity.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="center_id" class="form-label">{{ form.center_id.label }}</label>
+                    {{ form.center_id(class="form-select", id="center_id") }}
+                    {% if form.center_id.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.center_id.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="expiry_date" class="form-label">{{ form.expiry_date.label }}</label>
+                    {{ form.expiry_date(class="form-control", id="expiry_date", type="date") }}
+                    {% if form.expiry_date.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.expiry_date.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Update Inventory Item
+                </button>
+                <a href="{{ url_for('admin.inventory') }}" class="btn btn-secondary">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/datatables-config.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTables
+        $('.datatable').DataTable({
+            responsive: true,
+            order: [[0, 'asc']]
+        });
+        
+        // Keep the active tab after form submission
+        const activeTabId = sessionStorage.getItem('activeInventoryTab');
+        if (activeTabId) {
+            const activeTab = document.querySelector(`#inventoryTab button[data-bs-target="${activeTabId}"]`);
+            if (activeTab) {
+                const tabTrigger = new bootstrap.Tab(activeTab);
+                tabTrigger.show();
+            }
+        }
+        
+        // Save active tab when changed
+        const tabButtons = document.querySelectorAll('#inventoryTab button');
+        tabButtons.forEach(button => {
+            button.addEventListener('shown.bs.tab', function (event) {
+                sessionStorage.setItem('activeInventoryTab', event.target.getAttribute('data-bs-target'));
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Disaster Risk Information Management System{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-8 mx-auto text-center">
+        <h1 class="display-4 mb-4">Disaster Risk Information Management System</h1>
+        <p class="lead mb-4">A comprehensive platform for managing evacuation centers, evacuees, and donations during disaster response.</p>
+        
+        {% if not current_user.is_authenticated %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg me-md-2">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Register
+                </a>
+            </div>
+        {% else %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Admin Dashboard
+                    </a>
+                {% elif current_user.role == 'volunteer' %}
+                    <a href="{{ url_for('volunteer.dashboard') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Volunteer Dashboard
+                    </a>
+                {% elif current_user.role == 'donor' %}
+                    <a href="{{ url_for('donor.dashboard') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Donor Dashboard
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card h-100 bg-primary bg-opacity-10">
+            <div class="card-body text-center">
+                <i class="fas fa-building fa-4x mb-3"></i>
+                <h3 class="card-title">Evacuation Center Management</h3>
+                <p class="card-text">Efficiently manage evacuation centers, monitor capacity, and assign evacuees to appropriate facilities.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 bg-info bg-opacity-10">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-4x mb-3"></i>
+                <h3 class="card-title">Evacuee & Family Management</h3>
+                <p class="card-text">Register and track evacuees and their families, manage family relationships, and monitor special needs.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 bg-success bg-opacity-10">
+            <div class="card-body text-center">
+                <i class="fas fa-box-open fa-4x mb-3"></i>
+                <h3 class="card-title">Donation & Inventory Management</h3>
+                <p class="card-text">Track donations, manage inventory, and monitor expiring items to ensure efficient distribution.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h2 class="text-center mb-4">User Roles</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary bg-opacity-25">
+                <h3 class="mb-0">Administrator</h3>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Full access to all system features</li>
+                    <li class="list-group-item">Manage evacuation centers</li>
+                    <li class="list-group-item">Register and track evacuees</li>
+                    <li class="list-group-item">Monitor donations and inventory</li>
+                    <li class="list-group-item">Approve and manage users</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header bg-info bg-opacity-25">
+                <h3 class="mb-0">Volunteer</h3>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Register and update evacuees</li>
+                    <li class="list-group-item">Update evacuee statuses</li>
+                    <li class="list-group-item">Receive and verify donations</li>
+                    <li class="list-group-item">Sort and categorize donations</li>
+                    <li class="list-group-item">Distribute supplies to evacuees</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header bg-success bg-opacity-25">
+                <h3 class="mb-0">Donor</h3>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Donate food and non-food items</li>
+                    <li class="list-group-item">Specify evacuation center for donations</li>
+                    <li class="list-group-item">View history of past donations</li>
+                    <li class="list-group-item">Get notified when donations are used</li>
+                    <li class="list-group-item">Limited access to sensitive data</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
