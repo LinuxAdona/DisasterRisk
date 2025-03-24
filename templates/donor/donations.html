@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}My Donations - Donor Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Donations</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDonationModal">
+            <i class="fas fa-plus me-1"></i> Make New Donation
+        </button>
+    </div>
+    
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form action="{{ url_for('donor.donations') }}" method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search donations..." name="query" value="{{ request.args.get('query', '') }}">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="type">
+                        <option value="">All Types</option>
+                        <option value="food" {% if request.args.get('type') == 'food' %}selected{% endif %}>Food</option>
+                        <option value="non-food" {% if request.args.get('type') == 'non-food' %}selected{% endif %}>Non-Food</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="received" {% if request.args.get('status') == 'received' %}selected{% endif %}>Received</option>
+                        <option value="distributed" {% if request.args.get('status') == 'distributed' %}selected{% endif %}>Distributed</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Donation Status Cards -->
+    <div class="row mb-4">
+        {% set pending_count = donations|selectattr("status", "equalto", "pending")|list|length %}
+        {% set received_count = donations|selectattr("status", "equalto", "received")|list|length %}
+        {% set distributed_count = donations|selectattr("status", "equalto", "distributed")|list|length %}
+        
+        <div class="col-md-4">
+            <div class="card dashboard-card mb-3 h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Pending</h5>
+                    <h2 class="text-primary">{{ pending_count }}</h2>
+                    <p class="card-text">Donations awaiting processing</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card dashboard-card mb-3 h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Received</h5>
+                    <h2 class="text-success">{{ received_count }}</h2>
+                    <p class="card-text">Donations received at centers</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card dashboard-card mb-3 h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Distributed</h5>
+                    <h2 class="text-info">{{ distributed_count }}</h2>
+                    <p class="card-text">Donations given to evacuees</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Donations Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover datatable">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Quantity</th>
+                            <th>Date</th>
+                            <th>Evacuation Center</th>
+                            <th>Status</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for donation in donations %}
+                        <tr>
+                            <td>{{ donation.description }}</td>
+                            <td>{{ donation.type|capitalize }}</td>
+                            <td>{{ donation.quantity }} {{ donation.unit }}</td>
+                            <td>{{ donation.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ donation.evacuation_center.name }}</td>
+                            <td>
+                                <span class="status-indicator status-{{ donation.status }}"></span>
+                                {{ donation.status|capitalize }}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewDonationModal-{{ donation.id }}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">No donations found. Make your first donation today!</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Donation Modal -->
+    <div class="modal fade" id="addDonationModal" tabindex="-1" aria-labelledby="addDonationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addDonationModalLabel">Make a Donation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('donor.add_donation') }}" method="POST" class="needs-validation donation-form" novalidate>
+                    <div class="modal-body">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Donation Type</label>
+                            {{ form.type(class="form-select", id="type") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            {{ form.description(class="form-control", id="description", placeholder="Enter a detailed description of your donation") }}
+                            <div class="invalid-feedback">
+                                Please provide a description.
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                {{ form.quantity(class="form-control", id="quantity", type="number", min="1") }}
+                                <div class="invalid-feedback">
+                                    Please provide a quantity.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="unit" class="form-label">Unit</label>
+                                {{ form.unit(class="form-control", id="unit", placeholder="e.g., kg, pcs") }}
+                                <div class="invalid-feedback">
+                                    Please provide a unit.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3" id="expiry_date_group">
+                            <label for="expiry_date" class="form-label">Expiry Date (for food items)</label>
+                            {{ form.expiry_date(class="form-control", id="expiry_date", type="date") }}
+                            <div class="invalid-feedback">
+                                Please provide an expiry date for food items.
+                            </div>
+                            <div class="form-text">For food items, please specify the expiry date.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="evacuation_center_id" class="form-label">Evacuation Center</label>
+                            {{ form.evacuation_center_id(class="form-select", id="evacuation_center_id") }}
+                            <div class="invalid-feedback">
+                                Please select an evacuation center.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- View Donation Modals -->
+    {% for donation in donations %}
+    <div class="modal fade" id="viewDonationModal-{{ donation.id }}" tabindex="-1" aria-labelledby="viewDonationModalLabel-{{ donation.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewDonationModalLabel-{{ donation.id }}">Donation Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ donation.description }}</h5>
+                            <div class="mb-3">
+                                <strong>Type:</strong> {{ donation.type|capitalize }}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Quantity:</strong> {{ donation.quantity }} {{ donation.unit }}
+                            </div>
+                            {% if donation.type == 'food' and donation.expiry_date %}
+                            <div class="mb-3">
+                                <strong>Expiry Date:</strong> {{ donation.expiry_date.strftime('%Y-%m-%d') }}
+                            </div>
+                            {% endif %}
+                            <div class="mb-3">
+                                <strong>Evacuation Center:</strong> {{ donation.evacuation_center.name }}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Donation Date:</strong> {{ donation.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Last Updated:</strong> {{ donation.updated_at.strftime('%Y-%m-%d %H:%M') }}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Status:</strong> 
+                                <span class="badge {% if donation.status == 'pending' %}bg-primary{% elif donation.status == 'received' %}bg-success{% else %}bg-info{% endif %}">
+                                    {{ donation.status|capitalize }}
+                                </span>
+                            </div>
+                            
+                            {% if donation.status == 'pending' %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Your donation is waiting to be received by volunteers at the evacuation center.
+                            </div>
+                            {% elif donation.status == 'received' %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Your donation has been received and is now in inventory at the evacuation center.
+                            </div>
+                            {% elif donation.status == 'distributed' %}
+                            <div class="alert alert-primary">
+                                <i class="fas fa-hands-helping me-2"></i>
+                                Your donation has been distributed to evacuees in need. Thank you for your contribution!
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

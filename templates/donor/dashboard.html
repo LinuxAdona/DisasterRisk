@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Donor Dashboard - Disaster Risk Information Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Donor Dashboard</h1>
+    
+    <!-- Dashboard Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card dashboard-card mb-3 h-100">
+                <div class="card-body">
+                    <h5 class="card-title">My Contributions</h5>
+                    <h2 class="text-info">{{ total_donations }}</h2>
+                    <p class="card-text">Total donations made</p>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('donor.donations') }}" class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-history me-1"></i> View Donation History
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card dashboard-card mb-3 h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Make a Donation</h5>
+                    <p class="card-text">Your donations help provide essential supplies to evacuees in need.</p>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('donor.add_donation') }}" class="btn btn-primary">
+                            <i class="fas fa-gift me-1"></i> Donate Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Active Evacuation Centers -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Active Evacuation Centers</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Center Name</th>
+                            <th>Address</th>
+                            <th>Current Occupancy</th>
+                            <th>Capacity</th>
+                            <th>Contact Person</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for center in active_centers %}
+                        <tr>
+                            <td>{{ center.name }}</td>
+                            <td>{{ center.address }}</td>
+                            <td>
+                                {{ center.current_occupancy }}
+                                <div class="progress" style="height: 5px;">
+                                    {% set occupancy_percent = (center.current_occupancy / center.capacity) * 100 if center.capacity > 0 else 0 %}
+                                    <div class="progress-bar 
+                                        {% if occupancy_percent >= 90 %}bg-danger
+                                        {% elif occupancy_percent >= 70 %}bg-warning
+                                        {% else %}bg-success{% endif %}"
+                                        role="progressbar" style="width: {{ occupancy_percent }}%"
+                                        aria-valuenow="{{ occupancy_percent }}" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ center.capacity }}</td>
+                            <td>{{ center.contact_person if center.contact_person else 'N/A' }}</td>
+                            <td>
+                                <a href="{{ url_for('donor.add_donation') }}?center={{ center.id }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-gift me-1"></i> Donate
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No active evacuation centers found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Donation History -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Recent Donations</h5>
+            <a href="{{ url_for('donor.donations') }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-list me-1"></i> View All
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Quantity</th>
+                            <th>Date</th>
+                            <th>Evacuation Center</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for donation in donation_history[:5] %}
+                        <tr>
+                            <td>{{ donation.description }}</td>
+                            <td>{{ donation.type|capitalize }}</td>
+                            <td>{{ donation.quantity }} {{ donation.unit }}</td>
+                            <td>{{ donation.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ donation.evacuation_center.name }}</td>
+                            <td>
+                                <span class="status-indicator status-{{ donation.status }}"></span>
+                                {{ donation.status|capitalize }}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No donation history found. Make your first donation today!</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

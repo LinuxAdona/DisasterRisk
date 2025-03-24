@@ -1,305 +1,511 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Evacuees - Admin{% endblock %}
+{% block title %}{% if show_families %}Families{% else %}Evacuees{% endif %} - Admin Dashboard{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-6">
-        <h1>Evacuees</h1>
-    </div>
-    <div class="col-md-6 text-end">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEvacueeModal">
-            <i class="fas fa-plus-circle me-2"></i>Add Evacuee
-        </button>
-    </div>
-</div>
-
-{% if evacuee %}
-<div class="alert alert-info">
-    <i class="fas fa-info-circle me-2"></i>
-    You are editing evacuee: <strong>{{ evacuee.name }}</strong>
-</div>
-{% endif %}
-
-<div class="card mb-4">
-    <div class="card-header bg-primary bg-opacity-25">
-        <h5 class="mb-0">Evacuees</h5>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped" id="evacueesTable">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Age</th>
-                        <th>Gender</th>
-                        <th>Evacuation Center</th>
-                        <th>Family</th>
-                        <th>Status</th>
-                        <th>Special Needs</th>
-                        <th>Arrival Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for evacuee in evacuees %}
-                    <tr>
-                        <td>{{ evacuee.name }}</td>
-                        <td>{{ evacuee.age }}</td>
-                        <td>{{ evacuee.gender.capitalize() }}</td>
-                        <td>{{ evacuee.center.name if evacuee.center else 'N/A' }}</td>
-                        <td>{{ evacuee.family.name if evacuee.family else 'N/A' }}</td>
-                        <td>
-                            <span class="badge {% if evacuee.status == 'active' %}bg-success{% elif evacuee.status == 'relocated' %}bg-info{% elif evacuee.status == 'missing' %}bg-warning{% else %}bg-danger{% endif %}">
-                                {{ evacuee.status.capitalize() }}
-                            </span>
-                        </td>
-                        <td>{{ evacuee.special_needs if evacuee.special_needs else 'None' }}</td>
-                        <td>{{ evacuee.arrival_date|format_date }}</td>
-                        <td>
-                            <a href="{{ url_for('admin.edit_evacuee', evacuee_id=evacuee.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-edit"></i> Edit
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{% if show_families %}Families{% else %}Evacuees{% endif %}</h1>
+        <div>
+            {% if show_families %}
+                <a href="{{ url_for('admin.evacuees') }}" class="btn btn-outline-info me-2">
+                    <i class="fas fa-users me-1"></i> View Evacuees
+                </a>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFamilyModal">
+                    <i class="fas fa-plus me-1"></i> Add Family
+                </button>
+            {% else %}
+                <a href="{{ url_for('admin.families') }}" class="btn btn-outline-info me-2">
+                    <i class="fas fa-users me-1"></i> View Families
+                </a>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEvacueeModal">
+                    <i class="fas fa-plus me-1"></i> Add Evacuee
+                </button>
+            {% endif %}
         </div>
     </div>
-</div>
-
-<!-- Add Evacuee Modal -->
-<div class="modal fade" id="addEvacueeModal" tabindex="-1" aria-labelledby="addEvacueeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary bg-opacity-25">
-                <h5 class="modal-title" id="addEvacueeModalLabel">Add Evacuee</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="POST" action="{{ url_for('admin.add_evacuee') }}">
-                    {{ form.hidden_tag() }}
-                    
-                    <div class="mb-3">
-                        <label for="name" class="form-label">{{ form.name.label }}</label>
-                        {{ form.name(class="form-control", id="name", placeholder="Enter evacuee name") }}
-                        {% if form.name.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.name.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="age" class="form-label">{{ form.age.label }}</label>
-                            {{ form.age(class="form-control", id="age", placeholder="Enter age") }}
-                            {% if form.age.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.age.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6">
-                            <label for="gender" class="form-label">{{ form.gender.label }}</label>
-                            {{ form.gender(class="form-select", id="gender") }}
-                            {% if form.gender.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.gender.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="center_id" class="form-label">{{ form.center_id.label }}</label>
-                            {{ form.center_id(class="form-select", id="center_id") }}
-                            {% if form.center_id.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.center_id.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6">
-                            <label for="family_id" class="form-label">{{ form.family_id.label }}</label>
-                            {{ form.family_id(class="form-select", id="family_id") }}
-                            {% if form.family_id.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.family_id.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="special_needs" class="form-label">{{ form.special_needs.label }}</label>
-                        {{ form.special_needs(class="form-control", id="special_needs", placeholder="Enter any special needs or requirements", rows=3) }}
-                        {% if form.special_needs.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.special_needs.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="status" class="form-label">{{ form.status.label }}</label>
-                        {{ form.status(class="form-select", id="status") }}
-                        {% if form.status.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.status.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Save Evacuee
+    
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form action="{{ url_for('admin.evacuees' if not show_families else 'admin.families') }}" method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search..." name="query" value="{{ request.args.get('query', '') }}">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="fas fa-search"></i>
                         </button>
+                    </div>
+                </div>
+                
+                {% if not show_families %}
+                <div class="col-md-3">
+                    <select class="form-select" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="present" {% if request.args.get('status') == 'present' %}selected{% endif %}>Present</option>
+                        <option value="relocated" {% if request.args.get('status') == 'relocated' %}selected{% endif %}>Relocated</option>
+                        <option value="missing" {% if request.args.get('status') == 'missing' %}selected{% endif %}>Missing</option>
+                        <option value="deceased" {% if request.args.get('status') == 'deceased' %}selected{% endif %}>Deceased</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="center">
+                        <option value="">All Centers</option>
+                        {% for center in centers if centers is defined %}
+                            <option value="{{ center.id }}" {% if request.args.get('center')|int == center.id %}selected{% endif %}>{{ center.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if show_families %}
+    <!-- Families Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover datatable">
+                    <thead>
+                        <tr>
+                            <th>Family Name</th>
+                            <th>Head of Family</th>
+                            <th>Members</th>
+                            <th>Address</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for family in families %}
+                        <tr>
+                            <td>{{ family.family_name }}</td>
+                            <td>{{ family.head_of_family.full_name if family.head_of_family else 'Not assigned' }}</td>
+                            <td>{{ family.member_count }}</td>
+                            <td>{{ family.address if family.address else 'N/A' }}</td>
+                            <td>{{ family.contact_number if family.contact_number else 'N/A' }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editFamilyModal-{{ family.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteFamilyModal-{{ family.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No families found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Family Modal -->
+    <div class="modal fade" id="addFamilyModal" tabindex="-1" aria-labelledby="addFamilyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addFamilyModalLabel">Add Family</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('admin.add_family') }}" method="POST" class="needs-validation" novalidate>
+                    <div class="modal-body">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <label for="family_name" class="form-label">Family Name</label>
+                            {{ form.family_name(class="form-control", id="family_name", placeholder="Enter family name") }}
+                            <div class="invalid-feedback">
+                                Please provide a family name.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="head_of_family_id" class="form-label">Head of Family</label>
+                            {{ form.head_of_family_id(class="form-select", id="head_of_family_id") }}
+                            <div class="form-text">You can assign the head of family later.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Home Address</label>
+                            {{ form.address(class="form-control", id="address", placeholder="Enter home address") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="contact_number" class="form-label">Contact Number</label>
+                            {{ form.contact_number(class="form-control", id="contact_number", placeholder="Enter contact number") }}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        {{ form.submit(class="btn btn-primary") }}
                     </div>
                 </form>
             </div>
         </div>
     </div>
-</div>
-
-<!-- Edit Evacuee Form (if editing) -->
-{% if evacuee %}
-<div class="card mb-4">
-    <div class="card-header bg-primary bg-opacity-25">
-        <h5 class="mb-0">Edit Evacuee</h5>
+    
+    <!-- Edit Family Modals -->
+    {% for family in families %}
+    <div class="modal fade" id="editFamilyModal-{{ family.id }}" tabindex="-1" aria-labelledby="editFamilyModalLabel-{{ family.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editFamilyModalLabel-{{ family.id }}">Edit Family</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('admin.edit_family', family_id=family.id) }}" method="POST" class="needs-validation" novalidate>
+                    <div class="modal-body">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <label for="family_name-{{ family.id }}" class="form-label">Family Name</label>
+                            <input type="text" class="form-control" id="family_name-{{ family.id }}" name="family_name" value="{{ family.family_name }}" required>
+                            <div class="invalid-feedback">
+                                Please provide a family name.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="head_of_family_id-{{ family.id }}" class="form-label">Head of Family</label>
+                            <select class="form-select" id="head_of_family_id-{{ family.id }}" name="head_of_family_id">
+                                <option value="0">None</option>
+                                {% for evacuee in evacuees if evacuees is defined %}
+                                    <option value="{{ evacuee.id }}" {% if family.head_of_family_id == evacuee.id %}selected{% endif %}>
+                                        {{ evacuee.full_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="address-{{ family.id }}" class="form-label">Home Address</label>
+                            <input type="text" class="form-control" id="address-{{ family.id }}" name="address" value="{{ family.address }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="contact_number-{{ family.id }}" class="form-label">Contact Number</label>
+                            <input type="text" class="form-control" id="contact_number-{{ family.id }}" name="contact_number" value="{{ family.contact_number }}">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <form method="POST" action="{{ url_for('admin.edit_evacuee', evacuee_id=evacuee.id) }}">
-            {{ form.hidden_tag() }}
-            
-            <div class="mb-3">
-                <label for="name" class="form-label">{{ form.name.label }}</label>
-                {{ form.name(class="form-control", id="name", placeholder="Enter evacuee name") }}
-                {% if form.name.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.name.errors %}
-                            {{ error }}
-                        {% endfor %}
+    
+    <!-- Delete Family Modal -->
+    <div class="modal fade" id="deleteFamilyModal-{{ family.id }}" tabindex="-1" aria-labelledby="deleteFamilyModalLabel-{{ family.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteFamilyModalLabel-{{ family.id }}">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the family <strong>{{ family.family_name }}</strong>?</p>
+                    {% if family.members %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Note: Family members will remain in the system but will no longer be associated with this family.
                     </div>
-                {% endif %}
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="age" class="form-label">{{ form.age.label }}</label>
-                    {{ form.age(class="form-control", id="age", placeholder="Enter age") }}
-                    {% if form.age.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.age.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
                     {% endif %}
                 </div>
-                <div class="col-md-6">
-                    <label for="gender" class="form-label">{{ form.gender.label }}</label>
-                    {{ form.gender(class="form-select", id="gender") }}
-                    {% if form.gender.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.gender.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form action="{{ url_for('admin.delete_family', family_id=family.id) }}" method="POST">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i> Delete
+                        </button>
+                    </form>
                 </div>
             </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="center_id" class="form-label">{{ form.center_id.label }}</label>
-                    {{ form.center_id(class="form-select", id="center_id") }}
-                    {% if form.center_id.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.center_id.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="col-md-6">
-                    <label for="family_id" class="form-label">{{ form.family_id.label }}</label>
-                    {{ form.family_id(class="form-select", id="family_id") }}
-                    {% if form.family_id.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.family_id.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="mb-3">
-                <label for="special_needs" class="form-label">{{ form.special_needs.label }}</label>
-                {{ form.special_needs(class="form-control", id="special_needs", placeholder="Enter any special needs or requirements", rows=3) }}
-                {% if form.special_needs.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.special_needs.errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-            
-            <div class="mb-3">
-                <label for="status" class="form-label">{{ form.status.label }}</label>
-                {{ form.status(class="form-select", id="status") }}
-                {% if form.status.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.status.errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-            
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save me-2"></i>Update Evacuee
-                </button>
-                <a href="{{ url_for('admin.evacuees') }}" class="btn btn-secondary">
-                    <i class="fas fa-times me-2"></i>Cancel
-                </a>
-            </div>
-        </form>
+        </div>
     </div>
+    {% endfor %}
+    
+    {% else %}
+    <!-- Evacuees Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover datatable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Gender</th>
+                            <th>Family</th>
+                            <th>Evacuation Center</th>
+                            <th>Status</th>
+                            <th>Special Needs</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for evacuee in evacuees %}
+                        <tr>
+                            <td>{{ evacuee.full_name }}</td>
+                            <td>{{ evacuee.age if evacuee.age else 'N/A' }}</td>
+                            <td>{{ evacuee.gender|capitalize if evacuee.gender else 'N/A' }}</td>
+                            <td>{{ evacuee.family.family_name if evacuee.family else 'N/A' }}</td>
+                            <td>{{ evacuee.evacuation_center.name if evacuee.evacuation_center else 'Not assigned' }}</td>
+                            <td>
+                                <span class="status-indicator status-{{ evacuee.status }}"></span>
+                                {{ evacuee.status|capitalize }}
+                            </td>
+                            <td>{{ evacuee.special_needs if evacuee.special_needs else 'None' }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editEvacueeModal-{{ evacuee.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteEvacueeModal-{{ evacuee.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center">No evacuees found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Evacuee Modal -->
+    <div class="modal fade" id="addEvacueeModal" tabindex="-1" aria-labelledby="addEvacueeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addEvacueeModalLabel">Add Evacuee</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('admin.add_evacuee') }}" method="POST" class="needs-validation" novalidate>
+                    <div class="modal-body">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name</label>
+                                {{ form.first_name(class="form-control", id="first_name", placeholder="Enter first name") }}
+                                <div class="invalid-feedback">
+                                    Please provide a first name.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                {{ form.last_name(class="form-control", id="last_name", placeholder="Enter last name") }}
+                                <div class="invalid-feedback">
+                                    Please provide a last name.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                {{ form.date_of_birth(class="form-control", id="date_of_birth", type="date") }}
+                                <div class="invalid-feedback">
+                                    Please provide a valid date of birth.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="gender" class="form-label">Gender</label>
+                                {{ form.gender(class="form-select", id="gender") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="evacuation_center_id" class="form-label">Evacuation Center</label>
+                            {{ form.evacuation_center_id(class="form-select", id="evacuation_center_id") }}
+                            <div class="invalid-feedback">
+                                Please select an evacuation center.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="family_id" class="form-label">Family</label>
+                            {{ form.family_id(class="form-select", id="family_id") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            {{ form.status(class="form-select", id="status") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="special_needs" class="form-label">Special Needs</label>
+                            {{ form.special_needs(class="form-control", id="special_needs", placeholder="Enter any special needs or medical conditions") }}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Evacuee Modals -->
+    {% for evacuee in evacuees %}
+    <div class="modal fade" id="editEvacueeModal-{{ evacuee.id }}" tabindex="-1" aria-labelledby="editEvacueeModalLabel-{{ evacuee.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editEvacueeModalLabel-{{ evacuee.id }}">Edit Evacuee</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('admin.edit_evacuee', evacuee_id=evacuee.id) }}" method="POST" class="needs-validation" novalidate>
+                    <div class="modal-body">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name-{{ evacuee.id }}" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="first_name-{{ evacuee.id }}" name="first_name" value="{{ evacuee.first_name }}" required>
+                                <div class="invalid-feedback">
+                                    Please provide a first name.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name-{{ evacuee.id }}" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last_name-{{ evacuee.id }}" name="last_name" value="{{ evacuee.last_name }}" required>
+                                <div class="invalid-feedback">
+                                    Please provide a last name.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date_of_birth-{{ evacuee.id }}" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="date_of_birth-{{ evacuee.id }}" name="date_of_birth" value="{{ evacuee.date_of_birth }}">
+                                <div class="invalid-feedback">
+                                    Please provide a valid date of birth.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="gender-{{ evacuee.id }}" class="form-label">Gender</label>
+                                <select class="form-select" id="gender-{{ evacuee.id }}" name="gender">
+                                    <option value="male" {% if evacuee.gender == 'male' %}selected{% endif %}>Male</option>
+                                    <option value="female" {% if evacuee.gender == 'female' %}selected{% endif %}>Female</option>
+                                    <option value="other" {% if evacuee.gender == 'other' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="evacuation_center_id-{{ evacuee.id }}" class="form-label">Evacuation Center</label>
+                            <select class="form-select" id="evacuation_center_id-{{ evacuee.id }}" name="evacuation_center_id" required>
+                                {% for center in centers if centers is defined %}
+                                    <option value="{{ center.id }}" {% if evacuee.evacuation_center_id == center.id %}selected{% endif %}>
+                                        {{ center.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select an evacuation center.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="family_id-{{ evacuee.id }}" class="form-label">Family</label>
+                            <select class="form-select" id="family_id-{{ evacuee.id }}" name="family_id">
+                                <option value="0">None</option>
+                                {% for family in families if families is defined %}
+                                    <option value="{{ family.id }}" {% if evacuee.family_id == family.id %}selected{% endif %}>
+                                        {{ family.family_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="status-{{ evacuee.id }}" class="form-label">Status</label>
+                            <select class="form-select" id="status-{{ evacuee.id }}" name="status">
+                                <option value="present" {% if evacuee.status == 'present' %}selected{% endif %}>Present</option>
+                                <option value="relocated" {% if evacuee.status == 'relocated' %}selected{% endif %}>Relocated</option>
+                                <option value="missing" {% if evacuee.status == 'missing' %}selected{% endif %}>Missing</option>
+                                <option value="deceased" {% if evacuee.status == 'deceased' %}selected{% endif %}>Deceased</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="special_needs-{{ evacuee.id }}" class="form-label">Special Needs</label>
+                            <textarea class="form-control" id="special_needs-{{ evacuee.id }}" name="special_needs" rows="3">{{ evacuee.special_needs }}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Evacuee Modal -->
+    <div class="modal fade" id="deleteEvacueeModal-{{ evacuee.id }}" tabindex="-1" aria-labelledby="deleteEvacueeModalLabel-{{ evacuee.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteEvacueeModalLabel-{{ evacuee.id }}">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the evacuee <strong>{{ evacuee.full_name }}</strong>?</p>
+                    
+                    {% set is_head_of_family = false %}
+                    {% for family in families if families is defined %}
+                        {% if family.head_of_family_id == evacuee.id %}
+                            {% set is_head_of_family = true %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if is_head_of_family %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        This evacuee is a head of family. Please update the family records first.
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form action="{{ url_for('admin.delete_evacuee', evacuee_id=evacuee.id) }}" method="POST">
+                        <button type="submit" class="btn btn-danger" {% if is_head_of_family %}disabled{% endif %}>
+                            <i class="fas fa-trash me-1"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    {% endif %}
 </div>
-{% endif %}
-{% endblock %}
-
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/datatables-config.js') }}"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize DataTable
-        $('#evacueesTable').DataTable({
-            responsive: true,
-            order: [[5, 'asc'], [0, 'asc']],
-            columnDefs: [
-                { orderable: false, targets: 8 }
-            ]
-        });
-    });
-</script>
 {% endblock %}

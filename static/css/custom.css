@@ -1,0 +1,178 @@
+/* Custom styles for the Disaster Risk Information Management System */
+
+/* Use bootstrap variables for consistent theming */
+:root {
+    --highlight-color: var(--bs-info);
+    --danger-highlight: var(--bs-danger);
+    --warning-highlight: var(--bs-warning);
+}
+
+/* Dashboard cards with indicators */
+.dashboard-card {
+    border-left: 4px solid var(--highlight-color);
+    transition: transform 0.2s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+}
+
+.dashboard-card.warning {
+    border-left-color: var(--warning-highlight);
+}
+
+.dashboard-card.danger {
+    border-left-color: var(--danger-highlight);
+}
+
+/* Status indicators */
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.status-active, .status-present, .status-available {
+    background-color: var(--bs-success);
+}
+
+.status-closed, .status-distributed {
+    background-color: var(--bs-secondary);
+}
+
+.status-missing {
+    background-color: var(--bs-warning);
+}
+
+.status-deceased, .status-expired {
+    background-color: var(--bs-danger);
+}
+
+.status-relocated {
+    background-color: var(--bs-info);
+}
+
+.status-pending {
+    background-color: var(--bs-primary);
+}
+
+.status-received {
+    background-color: var(--bs-success);
+}
+
+/* Expiring soon indicator */
+.expiring-soon {
+    color: var(--bs-warning);
+    font-weight: bold;
+}
+
+.expired {
+    color: var(--bs-danger);
+    font-weight: bold;
+}
+
+/* Role badges */
+.role-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.role-admin {
+    background-color: var(--bs-danger);
+    color: white;
+}
+
+.role-volunteer {
+    background-color: var(--bs-success);
+    color: white;
+}
+
+.role-donor {
+    background-color: var(--bs-info);
+    color: white;
+}
+
+/* Dashboard charts */
+.chart-container {
+    position: relative;
+    margin: auto;
+    height: 250px;
+    width: 100%;
+}
+
+/* Responsive table adjustments */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+    
+    .dashboard-stats {
+        font-size: 0.9rem;
+    }
+    
+    .dashboard-stats h3 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Form styling */
+.form-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Login/Register form */
+.auth-form {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--bs-dark);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Welcome page styling */
+.welcome-container {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.welcome-heading {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.welcome-text {
+    font-size: 1.2rem;
+    max-width: 800px;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* Fix for dark mode forms */
+.form-control, .form-select {
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+    border-color: var(--bs-gray-600);
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+}
+
+/* Make active nav links more visible */
+.nav-link.active {
+    background-color: var(--highlight-color) !important;
+    color: var(--bs-dark) !important;
+    font-weight: bold;
+}
