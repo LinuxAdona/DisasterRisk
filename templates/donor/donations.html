@@ -79,17 +79,17 @@
                             </td>
                             <td>
                                 {% if donation.expiry_date %}
-                                {{ donation.expiry_date.strftime('%Y-%m-%d') }}
-                                {% if donation.is_expired() %}
+                                {{ donation.expiry_date.strftime('%Y-%m-%d') if donation.expiry_date else 'N/A' }}
+                                {% if donation.is_expired %}
                                 <span class="badge bg-danger">Expired</span>
-                                {% elif donation.is_expiring_soon() %}
+                                {% elif donation.is_expiring_soon %}
                                 <span class="badge bg-warning text-dark">Expiring Soon</span>
                                 {% endif %}
                                 {% else %}
                                 N/A
                                 {% endif %}
                             </td>
-                            <td>{{ donation.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ donation.created_at.strftime('%Y-%m-%d') if donation.created_at else 'N/A' }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

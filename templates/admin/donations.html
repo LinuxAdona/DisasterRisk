@@ -230,7 +230,14 @@
 
                         <div class="mb-3">
                             <label for="evacuation_center_id" class="form-label">Evacuation Center</label>
-                            {{ form.evacuation_center_id(class="form-select", id="evacuation_center_id") }}
+                            <select class="form-select" id="evacuation_center_id" name="evacuation_center_id" required>
+                                {% for center in centers %}
+                                <option value="{{ center.id }}" {% if form.evacuation_center_id.data==center.id
+                                    %}selected{% endif %}>
+                                    {{ center.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
                             <div class="invalid-feedback">
                                 Please select an evacuation center.
                             </div>
@@ -314,13 +321,12 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="evacuation_center_id-{{ item.id }}" class="form-label">Evacuation Center</label>
-                            <select class="form-select" id="evacuation_center_id-{{ item.id }}"
-                                name="evacuation_center_id" required>
-                                {% for center in centers if centers is defined %}
-                                <option value="{{ center.id }}" {% if item.evacuation_center_id==center.id %}selected{%
-                                    endif %}>
-                                    {{ center.name }}
+                            <label for="evacuation_center_id" class="form-label">Evacuation Center</label>
+                            <select class="form-select" id="evacuation_center_id" name="evacuation_center_id" required>
+                                {% for choice in form.evacuation_center_id.choices %}
+                                <option value="{{ choice[0] }}" {% if inventory_item and
+                                    inventory_item.evacuation_center_id==choice[0] %}selected{% endif %}>
+                                    {{ choice[1] }}
                                 </option>
                                 {% endfor %}
                             </select>

@@ -24,7 +24,8 @@
                 </div>
                 <div class="col-md-6">
                     <p><strong>Phone:</strong> {{ user.phone or 'Not provided' }}</p>
-                    <p><strong>Created:</strong> {{ user.created_at.strftime('%Y-%m-%d') }}</p>
+                    <p><strong>Created:</strong> {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'Not
+                        available' }}</p>
                     <p>
                         <strong>Status:</strong>
                         <span class="badge {% if user.is_active %}bg-success{% else %}bg-secondary{% endif %}">

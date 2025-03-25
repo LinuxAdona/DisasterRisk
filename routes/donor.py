@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from datetime import datetime
 
@@ -50,7 +50,10 @@ def donations():
     # Get results ordered by date
     donations = query.order_by(Donation.created_at.desc()).all()
     
-    return render_template('donor/donations.html', donations=donations)
+    # Get active evacuation centers
+    centers = EvacuationCenter.query.filter_by(status='active').all()
+    
+    return render_template('donor/donations.html', donations=donations, centers=centers)    
 
 @donor_bp.route('/donations/add', methods=['GET', 'POST'])
 @login_required
@@ -78,4 +81,5 @@ def add_donation():
         flash('Thank you for your donation! It has been submitted and is awaiting processing.', 'success')
         return redirect(url_for('donor.donations'))
     
-    return render_template('donor/donations.html', form=form, adding=True)
+    centers = EvacuationCenter.query.filter_by(status='active').all()
+    return render_template('donor/donations.html', form=form, adding=True, centers=centers)

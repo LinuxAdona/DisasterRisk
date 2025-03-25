@@ -489,16 +489,42 @@ def update_donation_status(donation_id):
 @admin_bp.route('/inventory')
 @login_required
 def inventory():
+    show_inventory = True  # We're in the inventory view
     inventory_items = InventoryItem.query.all()
     search_form = SearchForm()
     form = InventoryItemForm()  # For the add/edit modal
+        
+    # Populate evacuation center choices
+    centers = EvacuationCenter.query.filter_by(status='active').all()
+    form.evacuation_center_id.choices = [(c.id, c.name) for c in centers]
 
-    if search_form.validate_on_submit():
-        search_term = search_form.query.data
-        inventory_items = InventoryItem.query.filter(InventoryItem.description.ilike(f'%{search_term}%')).all()
+    # Start with base query
+    query = InventoryItem.query if show_inventory else Donation.query
 
-    return render_template('admin/donations.html', 
-                         inventory_items=inventory_items,
+    # Handle search
+    search_term = request.args.get('query')
+    if search_term:
+        query = query.filter(
+            InventoryItem.description.ilike(f'%{search_term}%') if show_inventory 
+            else Donation.description.ilike(f'%{search_term}%')
+        )
+
+    # Handle type filter
+    item_type = request.args.get('type')
+    if item_type in ['food', 'non-food']:
+        query = query.filter_by(type=item_type)
+
+    # Handle status filter
+    status = request.args.get('status')
+    if status:
+        query = query.filter_by(status=status)
+
+    # Execute query
+    items = query.all()
+    
+    return render_template('admin/donations.html',
+                         inventory_items=items if show_inventory else None,
+                         donations=items if not show_inventory else None,
                          search_form=search_form,
                          form=form,
                          show_inventory=True)
@@ -535,9 +561,12 @@ def add_inventory_item():
 def edit_inventory_item(item_id):
     inventory_item = InventoryItem.query.get_or_404(item_id)
     form = InventoryItemForm(obj=inventory_item)
-
+    
+    # Get all active evacuation centers
+    centers = EvacuationCenter.query.filter_by(status='active').all()
+    
     # Populate evacuation center dropdown options
-    form.evacuation_center_id.choices = [(c.id, c.name) for c in EvacuationCenter.query.filter_by(status='active').all()]
+    form.evacuation_center_id.choices = [(c.id, c.name) for c in centers]
 
     if form.validate_on_submit():
         inventory_item.type = form.type.data
@@ -553,7 +582,12 @@ def edit_inventory_item(item_id):
         flash('Inventory item updated successfully!', 'success')
         return redirect(url_for('admin.inventory'))
 
-    return render_template('admin/donations.html', form=form, editing_inventory=True, inventory_item=inventory_item, show_inventory=True)
+    return render_template('admin/donations.html', 
+                         form=form, 
+                         editing_inventory=True, 
+                         inventory_item=inventory_item, 
+                         show_inventory=True,
+                         centers=centers)  # Pass centers to the template
 
 @admin_bp.route('/inventory/delete/<int:item_id>', methods=['POST'])
 @login_required

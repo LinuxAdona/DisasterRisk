@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container">
     <h1 class="mb-4">Donor Dashboard</h1>
-    
+
     <!-- Dashboard Summary Cards -->
     <div class="row mb-4">
         <div class="col-md-4">
@@ -22,7 +22,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-8">
             <div class="card dashboard-card mb-3 h-100">
                 <div class="card-body">
@@ -37,7 +37,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Active Evacuation Centers -->
     <div class="card mb-4">
         <div class="card-header">
@@ -64,20 +64,22 @@
                             <td>
                                 {{ center.current_occupancy }}
                                 <div class="progress" style="height: 5px;">
-                                    {% set occupancy_percent = (center.current_occupancy / center.capacity) * 100 if center.capacity > 0 else 0 %}
+                                    {% set occupancy_percent = (center.current_occupancy / center.capacity) * 100 if
+                                    center.capacity > 0 else 0 %}
                                     <div class="progress-bar 
                                         {% if occupancy_percent >= 90 %}bg-danger
                                         {% elif occupancy_percent >= 70 %}bg-warning
-                                        {% else %}bg-success{% endif %}"
-                                        role="progressbar" style="width: {{ occupancy_percent }}%"
-                                        aria-valuenow="{{ occupancy_percent }}" aria-valuemin="0" aria-valuemax="100">
+                                        {% else %}bg-success{% endif %}" role="progressbar"
+                                        style="width: {{ occupancy_percent }}%" aria-valuenow="{{ occupancy_percent }}"
+                                        aria-valuemin="0" aria-valuemax="100">
                                     </div>
                                 </div>
                             </td>
                             <td>{{ center.capacity }}</td>
                             <td>{{ center.contact_person if center.contact_person else 'N/A' }}</td>
                             <td>
-                                <a href="{{ url_for('donor.add_donation') }}?center={{ center.id }}" class="btn btn-sm btn-outline-primary">
+                                <a href="{{ url_for('donor.add_donation') }}?center={{ center.id }}"
+                                    class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-gift me-1"></i> Donate
                                 </a>
                             </td>
@@ -92,7 +94,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Recent Donation History -->
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -120,7 +122,7 @@
                             <td>{{ donation.description }}</td>
                             <td>{{ donation.type|capitalize }}</td>
                             <td>{{ donation.quantity }} {{ donation.unit }}</td>
-                            <td>{{ donation.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ donation.created_at.strftime('%Y-%m-%d') if donation.created_at else 'N/A' }}</td>
                             <td>{{ donation.evacuation_center.name }}</td>
                             <td>
                                 <span class="status-indicator status-{{ donation.status }}"></span>
@@ -129,7 +131,8 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="6" class="text-center">No donation history found. Make your first donation today!</td>
+                            <td colspan="6" class="text-center">No donation history found. Make your first donation
+                                today!</td>
                         </tr>
                         {% endfor %}
                     </tbody>
