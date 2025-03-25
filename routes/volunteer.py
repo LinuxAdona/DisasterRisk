@@ -54,26 +54,41 @@ def dashboard():
 @volunteer_bp.route('/evacuees')
 @login_required
 def evacuees():
-    evacuees = Evacuee.query.all()
-    families = Family.query.all()
+    query = request.args.get('query', '')
+    status = request.args.get('status', '')
+    center_id = request.args.get('center_id', '')
+    
+    evacuees_query = Evacuee.query
+    
+    if query:
+        evacuees_query = evacuees_query.filter(
+            Evacuee.first_name.ilike(f'%{query}%') |
+            Evacuee.last_name.ilike(f'%{query}%') |
+            Evacuee.special_needs.ilike(f'%{query}%')
+        )
+    
+    if status:
+        evacuees_query = evacuees_query.filter(Evacuee.status == status)
+        
+    if center_id:
+        evacuees_query = evacuees_query.filter(Evacuee.evacuation_center_id == center_id)
+    
+    evacuees = evacuees_query.all()
     centers = EvacuationCenter.query.all()
-    form = EvacueeForm()
+    families = Family.query.all()
+    search_form = SearchForm()
+    evacuee_form = EvacueeForm()
     
-    # Populate form choices
-    form.evacuation_center_id.choices = [(c.id, c.name) for c in centers]
-    form.family_id.choices = [(0, 'None')] + [(f.id, f.family_name) for f in families]
+    # Load form choices
+    evacuee_form.evacuation_center_id.choices = [(c.id, c.name) for c in centers]
+    evacuee_form.family_id.choices = [(0, 'No Family')] + [(f.id, f.family_name) for f in families]
     
-    if request.args.get('query'):
-        search_term = request.args.get('query')
-        evacuees = Evacuee.query.filter(
-            Evacuee.first_name.ilike(f'%{search_term}%') | 
-            Evacuee.last_name.ilike(f'%{search_term}%')
-        ).all()
-    
-    return render_template('volunteer/evacuees.html', evacuees=evacuees,
-                         families=families,
+    return render_template('volunteer/evacuees.html',
+                         evacuees=evacuees,
                          centers=centers,
-                         form=form)
+                         families=families,
+                         search_form=search_form,
+                         form=evacuee_form)
 
 @volunteer_bp.route('/evacuees/add', methods=['GET', 'POST'])
 @login_required

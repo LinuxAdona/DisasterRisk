@@ -57,7 +57,7 @@
                 <div class="col-md-3">
                     <select class="form-select" name="center">
                         <option value="">All Centers</option>
-                        {% for center in centers if centers is defined %}
+                        {% for center in centers %}
                         <option value="{{ center.id }}" {% if request.args.get('center')|int==center.id %}selected{%
                             endif %}>{{ center.name }}</option>
                         {% endfor %}
@@ -195,7 +195,7 @@
                             <label for="head_of_family_id-{{ family.id }}" class="form-label">Head of Family</label>
                             <select class="form-select" id="head_of_family_id-{{ family.id }}" name="head_of_family_id">
                                 <option value="0">None</option>
-                                {% for evacuee in evacuees if evacuees is defined %}
+                                {% for evacuee in evacuees %}
                                 <option value="{{ evacuee.id }}" {% if family.head_of_family_id==evacuee.id %}selected{%
                                     endif %}>
                                     {{ evacuee.full_name }}
@@ -381,8 +381,8 @@
 
                         <div class="mb-3">
                             <label for="special_needs" class="form-label">Special Needs</label>
-                            {{ form.special_needs(class="form-control", id="special_needs", placeholder="Enter any
-                            special needs or medical conditions") }}
+                            {{ form.special_needs(class="form-control", id="special_needs",
+                            placeholder="Enter any special needs or medical conditions") }}
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -457,7 +457,7 @@
                                 Center</label>
                             <select class="form-select" id="evacuation_center_id-{{ evacuee.id }}"
                                 name="evacuation_center_id" required>
-                                {% for center in centers if centers is defined %}
+                                {% for center in centers %}
                                 <option value="{{ center.id }}" {% if evacuee.evacuation_center_id==center.id
                                     %}selected{% endif %}>
                                     {{ center.name }}
@@ -473,7 +473,7 @@
                             <label for="family_id-{{ evacuee.id }}" class="form-label">Family</label>
                             <select class="form-select" id="family_id-{{ evacuee.id }}" name="family_id">
                                 <option value="0">None</option>
-                                {% for family in families if families is defined %}
+                                {% for family in families %}
                                 <option value="{{ family.id }}" {% if evacuee.family_id==family.id %}selected{% endif
                                     %}>
                                     {{ family.family_name }}
@@ -524,7 +524,7 @@
                     <p>Are you sure you want to delete the evacuee <strong>{{ evacuee.full_name }}</strong>?</p>
 
                     {% set is_head_of_family = false %}
-                    {% for family in families if families is defined %}
+                    {% for family in families %}
                     {% if family.head_of_family_id == evacuee.id %}
                     {% set is_head_of_family = true %}
                     {% endif %}
