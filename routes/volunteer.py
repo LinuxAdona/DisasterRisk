@@ -194,19 +194,39 @@ def update_evacuee_status(evacuee_id):
 @volunteer_bp.route('/donations')
 @login_required
 def donations():
+    query = Donation.query
+    
+    # Handle search query
+    search_term = request.args.get('query')
+    if search_term:
+        query = query.filter(Donation.description.ilike(f'%{search_term}%'))
+    
+    # Handle type filter
+    donation_type = request.args.get('type')
+    if donation_type in ['food', 'non-food']:
+        query = query.filter(Donation.type == donation_type)
+        
+    # Get filtered donations and inventory items
+    donations = query.order_by(Donation.created_at.desc()).all()
+    inventory_items = InventoryItem.query.all()
+    
+    return render_template('volunteer/donations.html', donations=donations)
+def donations():
     donations = Donation.query.all()
     inventory_items = InventoryItem.query.all()
     form = SearchForm()
-    
+
     if form.validate_on_submit():
         search_term = form.query.data
-        donations = Donation.query.filter(Donation.description.ilike(f'%{search_term}%')).all()
-        inventory_items = InventoryItem.query.filter(InventoryItem.description.ilike(f'%{search_term}%')).all()
-    
-    return render_template('volunteer/donations.html', 
-                          donations=donations, 
-                          inventory_items=inventory_items, 
-                          form=form)
+        donations = Donation.query.filter(
+            Donation.description.ilike(f'%{search_term}%')).all()
+        inventory_items = InventoryItem.query.filter(
+            InventoryItem.description.ilike(f'%{search_term}%')).all()
+
+    return render_template('volunteer/donations.html',
+                           donations=donations,
+                           inventory_items=inventory_items,
+                           form=form)
 
 @volunteer_bp.route('/donations/receive/<int:donation_id>', methods=['POST'])
 @login_required

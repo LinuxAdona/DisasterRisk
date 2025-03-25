@@ -35,17 +35,22 @@ def dashboard():
 @donor_bp.route('/donations')
 @login_required
 def donations():
-    # Get donation history for this donor
-    donations = Donation.query.filter_by(donor_id=current_user.id).order_by(Donation.created_at.desc()).all()
-    form = SearchForm()
+    query = Donation.query.filter_by(donor_id=current_user.id)
     
-    if form.validate_on_submit():
-        search_term = form.query.data
-        donations = Donation.query.filter_by(donor_id=current_user.id).filter(
-            Donation.description.ilike(f'%{search_term}%')
-        ).order_by(Donation.created_at.desc()).all()
+    # Handle search query
+    search_term = request.args.get('query', '').strip()
+    if search_term:
+        query = query.filter(Donation.description.ilike(f'%{search_term}%'))
     
-    return render_template('donor/donations.html', donations=donations, form=form)
+    # Handle type filter
+    donation_type = request.args.get('type')
+    if donation_type in ['food', 'non-food']:
+        query = query.filter(Donation.type == donation_type)
+        
+    # Get results ordered by date
+    donations = query.order_by(Donation.created_at.desc()).all()
+    
+    return render_template('donor/donations.html', donations=donations)
 
 @donor_bp.route('/donations/add', methods=['GET', 'POST'])
 @login_required

@@ -8,17 +8,17 @@
         <h1>{% if showing_expiring %}Expiring Food Items{% else %}Donation Management{% endif %}</h1>
         <div>
             {% if not showing_expiring %}
-                <a href="{{ url_for('volunteer.report_expiring') }}" class="btn btn-warning me-2">
-                    <i class="fas fa-exclamation-triangle me-1"></i> View Expiring Items
-                </a>
+            <a href="{{ url_for('volunteer.report_expiring') }}" class="btn btn-warning me-2">
+                <i class="fas fa-exclamation-triangle me-1"></i> View Expiring Items
+            </a>
             {% else %}
-                <a href="{{ url_for('volunteer.donations') }}" class="btn btn-outline-secondary me-2">
-                    <i class="fas fa-arrow-left me-1"></i> Back to All Donations
-                </a>
+            <a href="{{ url_for('volunteer.donations') }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left me-1"></i> Back to All Donations
+            </a>
             {% endif %}
         </div>
     </div>
-    
+
     {% if showing_expiring %}
     <!-- Expiring Food Items Table -->
     <div class="card dashboard-card danger">
@@ -47,11 +47,14 @@
                             <td>{{ item.evacuation_center.name }}</td>
                             <td class="expiring-soon">{{ item.expiry_date.strftime('%Y-%m-%d') }}</td>
                             <td>{{ (item.expiry_date - now().date()).days }}</td>
-                            <td><span class="status-indicator status-{{ item.status }}"></span>{{ item.status|capitalize }}</td>
+                            <td><span class="status-indicator status-{{ item.status }}"></span>{{ item.status|capitalize
+                                }}</td>
                             <td>
                                 {% if item.status == 'available' %}
-                                <form action="{{ url_for('volunteer.distribute_inventory', item_id=item.id) }}" method="POST">
-                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Mark this item as distributed?')">
+                                <form action="{{ url_for('volunteer.distribute_inventory', item_id=item.id) }}"
+                                    method="POST">
+                                    <button type="submit" class="btn btn-sm btn-success"
+                                        onclick="return confirm('Mark this item as distributed?')">
                                         <i class="fas fa-box-open me-1"></i> Distribute
                                     </button>
                                 </form>
@@ -70,7 +73,7 @@
             </div>
         </div>
     </div>
-    
+
     {% else %}
     <!-- Search and Filter -->
     <div class="card mb-4">
@@ -78,53 +81,62 @@
             <form action="{{ url_for('volunteer.donations') }}" method="GET" class="row g-3">
                 <div class="col-md-4">
                     <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search donations or inventory..." name="query" value="{{ request.args.get('query', '') }}">
+                        <input type="text" class="form-control" placeholder="Search donations or inventory..."
+                            name="query" value="{{ request.args.get('query', '') }}">
                         <button class="btn btn-outline-secondary" type="submit">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
                 </div>
-                
+
                 <div class="col-md-3">
                     <select class="form-select" name="type">
                         <option value="">All Types</option>
-                        <option value="food" {% if request.args.get('type') == 'food' %}selected{% endif %}>Food</option>
-                        <option value="non-food" {% if request.args.get('type') == 'non-food' %}selected{% endif %}>Non-Food</option>
+                        <option value="food" {% if request.args.get('type')=='food' %}selected{% endif %}>Food</option>
+                        <option value="non-food" {% if request.args.get('type')=='non-food' %}selected{% endif %}>
+                            Non-Food</option>
                     </select>
                 </div>
-                
+
                 <div class="col-md-3">
                     <select class="form-select" name="status">
                         <option value="">All Statuses</option>
-                        <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
-                        <option value="received" {% if request.args.get('status') == 'received' %}selected{% endif %}>Received</option>
-                        <option value="distributed" {% if request.args.get('status') == 'distributed' %}selected{% endif %}>Distributed</option>
-                        <option value="available" {% if request.args.get('status') == 'available' %}selected{% endif %}>Available</option>
-                        <option value="expired" {% if request.args.get('status') == 'expired' %}selected{% endif %}>Expired</option>
+                        <option value="pending" {% if request.args.get('status')=='pending' %}selected{% endif %}>
+                            Pending</option>
+                        <option value="received" {% if request.args.get('status')=='received' %}selected{% endif %}>
+                            Received</option>
+                        <option value="distributed" {% if request.args.get('status')=='distributed' %}selected{% endif
+                            %}>Distributed</option>
+                        <option value="available" {% if request.args.get('status')=='available' %}selected{% endif %}>
+                            Available</option>
+                        <option value="expired" {% if request.args.get('status')=='expired' %}selected{% endif %}>
+                            Expired</option>
                     </select>
                 </div>
-                
+
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">Filter</button>
                 </div>
             </form>
         </div>
     </div>
-    
+
     <!-- Pending Donations Tab -->
     <ul class="nav nav-tabs mb-4" id="donationTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="true">
+            <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending"
+                type="button" role="tab" aria-controls="pending" aria-selected="true">
                 Pending Donations
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab" aria-controls="inventory" aria-selected="false">
+            <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button"
+                role="tab" aria-controls="inventory" aria-selected="false">
                 Current Inventory
             </button>
         </li>
     </ul>
-    
+
     <div class="tab-content" id="donationTabsContent">
         <!-- Pending Donations Content -->
         <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
@@ -152,14 +164,17 @@
                                     <td>{{ donation.quantity }} {{ donation.unit }}</td>
                                     <td>{{ donation.donor.full_name if donation.donor else 'Anonymous' }}</td>
                                     <td>{{ donation.evacuation_center.name }}</td>
-                                    <td>{{ donation.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ donation.created_at.strftime('%Y-%m-%d') if donation.created_at else 'N/A' }}
+                                    </td>
                                     <td>
                                         <span class="status-indicator status-{{ donation.status }}"></span>
                                         {{ donation.status|capitalize }}
                                     </td>
                                     <td>
                                         {% if donation.status == 'pending' %}
-                                        <form action="{{ url_for('volunteer.receive_donation', donation_id=donation.id) }}" method="POST">
+                                        <form
+                                            action="{{ url_for('volunteer.receive_donation', donation_id=donation.id) }}"
+                                            method="POST">
                                             <button type="submit" class="btn btn-sm btn-success">
                                                 <i class="fas fa-check me-1"></i> Receive
                                             </button>
@@ -182,7 +197,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Inventory Content -->
         <div class="tab-pane fade" id="inventory" role="tabpanel" aria-labelledby="inventory-tab">
             <div class="card">
@@ -209,15 +224,16 @@
                                     <td>{{ item.evacuation_center.name }}</td>
                                     <td>
                                         {% if item.expiry_date %}
-                                            {% if item.is_expired %}
-                                                <span class="expired">{{ item.expiry_date.strftime('%Y-%m-%d') }} (Expired)</span>
-                                            {% elif item.is_expiring_soon %}
-                                                <span class="expiring-soon">{{ item.expiry_date.strftime('%Y-%m-%d') }}</span>
-                                            {% else %}
-                                                {{ item.expiry_date.strftime('%Y-%m-%d') }}
-                                            {% endif %}
+                                        {% if item.is_expired %}
+                                        <span class="expired">{{ item.expiry_date.strftime('%Y-%m-%d') }}
+                                            (Expired)</span>
+                                        {% elif item.is_expiring_soon %}
+                                        <span class="expiring-soon">{{ item.expiry_date.strftime('%Y-%m-%d') }}</span>
                                         {% else %}
-                                            N/A
+                                        {{ item.expiry_date.strftime('%Y-%m-%d') }}
+                                        {% endif %}
+                                        {% else %}
+                                        N/A
                                         {% endif %}
                                     </td>
                                     <td>
@@ -226,8 +242,10 @@
                                     </td>
                                     <td>
                                         {% if item.status == 'available' %}
-                                        <form action="{{ url_for('volunteer.distribute_inventory', item_id=item.id) }}" method="POST">
-                                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Mark this item as distributed?')">
+                                        <form action="{{ url_for('volunteer.distribute_inventory', item_id=item.id) }}"
+                                            method="POST">
+                                            <button type="submit" class="btn btn-sm btn-success"
+                                                onclick="return confirm('Mark this item as distributed?')">
                                                 <i class="fas fa-box-open me-1"></i> Distribute
                                             </button>
                                         </form>
