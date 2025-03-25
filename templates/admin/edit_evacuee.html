@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Edit Evacuee - Disaster Risk Information Management System{% endblock %}
+{% block title %}Edit Evacuee - Admin Dashboard{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -18,101 +18,54 @@
         <div class="card-body">
             <form action="{{ url_for('admin.edit_evacuee', evacuee_id=evacuee.id) }}" method="POST"
                 class="needs-validation" novalidate>
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                {{ form.hidden_tag() }}
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="first_name" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="first_name" name="first_name"
-                            value="{{ evacuee.first_name }}" required>
-                        <div class="invalid-feedback">
-                            Please provide a first name.
-                        </div>
+                        {{ form.first_name(class="form-control", id="first_name") }}
                     </div>
-
                     <div class="col-md-6 mb-3">
                         <label for="last_name" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="last_name" name="last_name"
-                            value="{{ evacuee.last_name }}" required>
-                        <div class="invalid-feedback">
-                            Please provide a last name.
-                        </div>
+                        {{ form.last_name(class="form-control", id="last_name") }}
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="date_of_birth" class="form-label">Date of Birth</label>
-                        <input type="date" class="form-control" id="date_of_birth" name="date_of_birth"
-                            value="{{ evacuee.date_of_birth.strftime('%Y-%m-%d') if evacuee.date_of_birth else '' }}">
+                        {{ form.date_of_birth(class="form-control", id="date_of_birth") }}
                     </div>
-
                     <div class="col-md-6 mb-3">
                         <label for="gender" class="form-label">Gender</label>
-                        <select class="form-select" id="gender" name="gender">
-                            <option value="" {% if not evacuee.gender %}selected{% endif %}>- Select -</option>
-                            <option value="male" {% if evacuee.gender=='male' %}selected{% endif %}>Male</option>
-                            <option value="female" {% if evacuee.gender=='female' %}selected{% endif %}>Female</option>
-                            <option value="other" {% if evacuee.gender=='other' %}selected{% endif %}>Other</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="status" class="form-label">Status</label>
-                        <select class="form-select" id="status" name="status" required>
-                            <option value="present" {% if evacuee.status=='present' %}selected{% endif %}>Present
-                            </option>
-                            <option value="relocated" {% if evacuee.status=='relocated' %}selected{% endif %}>Relocated
-                            </option>
-                            <option value="missing" {% if evacuee.status=='missing' %}selected{% endif %}>Missing
-                            </option>
-                            <option value="deceased" {% if evacuee.status=='deceased' %}selected{% endif %}>Deceased
-                            </option>
-                        </select>
-                        <div class="invalid-feedback">
-                            Please select a status.
-                        </div>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label for="family_id" class="form-label">Family</label>
-                        <select class="form-select" id="family_id" name="family_id">
-                            <option value="">No Family</option>
-                            {% for family in families %}
-                            <option value="{{ family.id }}" {% if evacuee.family_id==family.id %}selected{% endif %}>
-                                {{ family.family_name }}
-                            </option>
-                            {% endfor %}
-                        </select>
+                        {{ form.gender(class="form-select", id="gender") }}
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="evacuation_center_id" class="form-label">Evacuation Center</label>
-                    <select class="form-select" id="evacuation_center_id" name="evacuation_center_id" required>
-                        {% for center in centers %}
-                        <option value="{{ center.id }}" {% if evacuee.evacuation_center_id==center.id %}selected{% endif
-                            %}>
-                            {{ center.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <div class="invalid-feedback">
-                        Please select an evacuation center.
-                    </div>
+                    <label for="status" class="form-label">Status</label>
+                    {{ form.status(class="form-select", id="status") }}
                 </div>
 
                 <div class="mb-3">
                     <label for="special_needs" class="form-label">Special Needs</label>
-                    <textarea class="form-control" id="special_needs" name="special_needs"
-                        rows="3">{{ evacuee.special_needs or '' }}</textarea>
+                    {{ form.special_needs(class="form-control", id="special_needs", rows="3") }}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="family_id" class="form-label">Family</label>
+                        {{ form.family_id(class="form-select", id="family_id") }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="evacuation_center_id" class="form-label">Evacuation Center</label>
+                        {{ form.evacuation_center_id(class="form-select", id="evacuation_center_id") }}
+                    </div>
                 </div>
 
                 <div class="d-flex justify-content-end mt-4">
                     <a href="{{ url_for('admin.evacuees') }}" class="btn btn-secondary me-2">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    {{ form.submit(class="btn btn-primary") }}
                 </div>
             </form>
         </div>
@@ -125,22 +78,16 @@
     // Form validation
     (function () {
         'use strict';
-
-        // Fetch all the forms we want to apply custom Bootstrap validation styles to
         var forms = document.querySelectorAll('.needs-validation');
-
-        // Loop over them and prevent submission
-        Array.prototype.slice.call(forms)
-            .forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-
-                    form.classList.add('was-validated');
-                }, false);
-            });
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
     })();
 </script>
 {% endblock %}

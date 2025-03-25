@@ -8,66 +8,75 @@
         <h1>{% if show_inventory %}Inventory Management{% else %}Donation Management{% endif %}</h1>
         <div>
             {% if show_inventory %}
-                <a href="{{ url_for('admin.donations') }}" class="btn btn-outline-info me-2">
-                    <i class="fas fa-gift me-1"></i> View Donations
-                </a>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addInventoryModal">
-                    <i class="fas fa-plus me-1"></i> Add Inventory Item
-                </button>
+            <a href="{{ url_for('admin.donations') }}" class="btn btn-outline-info me-2">
+                <i class="fas fa-gift me-1"></i> View Donations
+            </a>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addInventoryModal">
+                <i class="fas fa-plus me-1"></i> Add Inventory Item
+            </button>
             {% else %}
-                <a href="{{ url_for('admin.inventory') }}" class="btn btn-outline-info me-2">
-                    <i class="fas fa-boxes me-1"></i> View Inventory
-                </a>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDonationModal">
-                    <i class="fas fa-plus me-1"></i> Add Donation
-                </button>
+            <a href="{{ url_for('admin.inventory') }}" class="btn btn-outline-info me-2">
+                <i class="fas fa-boxes me-1"></i> View Inventory
+            </a>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDonationModal">
+                <i class="fas fa-plus me-1"></i> Add Donation
+            </button>
             {% endif %}
         </div>
     </div>
-    
+
     <!-- Search and Filter -->
     <div class="card mb-4">
         <div class="card-body">
-            <form action="{{ url_for('admin.inventory' if show_inventory else 'admin.donations') }}" method="GET" class="row g-3">
+            <form action="{{ url_for('admin.inventory' if show_inventory else 'admin.donations') }}" method="GET"
+                class="row g-3">
                 <div class="col-md-4">
                     <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search..." name="query" value="{{ request.args.get('query', '') }}">
+                        <input type="text" class="form-control" placeholder="Search..." name="query"
+                            value="{{ request.args.get('query', '') }}">
                         <button class="btn btn-outline-secondary" type="submit">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
                 </div>
-                
+
                 <div class="col-md-3">
                     <select class="form-select" name="type">
                         <option value="">All Types</option>
-                        <option value="food" {% if request.args.get('type') == 'food' %}selected{% endif %}>Food</option>
-                        <option value="non-food" {% if request.args.get('type') == 'non-food' %}selected{% endif %}>Non-Food</option>
+                        <option value="food" {% if request.args.get('type')=='food' %}selected{% endif %}>Food</option>
+                        <option value="non-food" {% if request.args.get('type')=='non-food' %}selected{% endif %}>
+                            Non-Food</option>
                     </select>
                 </div>
-                
+
                 <div class="col-md-3">
                     <select class="form-select" name="status">
                         <option value="">All Statuses</option>
                         {% if show_inventory %}
-                            <option value="available" {% if request.args.get('status') == 'available' %}selected{% endif %}>Available</option>
-                            <option value="distributed" {% if request.args.get('status') == 'distributed' %}selected{% endif %}>Distributed</option>
-                            <option value="expired" {% if request.args.get('status') == 'expired' %}selected{% endif %}>Expired</option>
+                        <option value="available" {% if request.args.get('status')=='available' %}selected{% endif %}>
+                            Available</option>
+                        <option value="distributed" {% if request.args.get('status')=='distributed' %}selected{% endif
+                            %}>Distributed</option>
+                        <option value="expired" {% if request.args.get('status')=='expired' %}selected{% endif %}>
+                            Expired</option>
                         {% else %}
-                            <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
-                            <option value="received" {% if request.args.get('status') == 'received' %}selected{% endif %}>Received</option>
-                            <option value="distributed" {% if request.args.get('status') == 'distributed' %}selected{% endif %}>Distributed</option>
+                        <option value="pending" {% if request.args.get('status')=='pending' %}selected{% endif %}>
+                            Pending</option>
+                        <option value="received" {% if request.args.get('status')=='received' %}selected{% endif %}>
+                            Received</option>
+                        <option value="distributed" {% if request.args.get('status')=='distributed' %}selected{% endif
+                            %}>Distributed</option>
                         {% endif %}
                     </select>
                 </div>
-                
+
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">Filter</button>
                 </div>
             </form>
         </div>
     </div>
-    
+
     <!-- Alert for expiring items -->
     {% if expiring_food and show_inventory %}
     <div class="alert alert-warning">
@@ -99,7 +108,7 @@
         </div>
     </div>
     {% endif %}
-    
+
     {% if show_inventory %}
     <!-- Inventory Table -->
     <div class="card">
@@ -126,15 +135,15 @@
                             <td>{{ item.evacuation_center.name }}</td>
                             <td>
                                 {% if item.expiry_date %}
-                                    {% if item.is_expired %}
-                                        <span class="expired">{{ item.expiry_date.strftime('%Y-%m-%d') }} (Expired)</span>
-                                    {% elif item.is_expiring_soon %}
-                                        <span class="expiring-soon">{{ item.expiry_date.strftime('%Y-%m-%d') }}</span>
-                                    {% else %}
-                                        {{ item.expiry_date.strftime('%Y-%m-%d') }}
-                                    {% endif %}
+                                {% if item.is_expired %}
+                                <span class="expired">{{ item.expiry_date.strftime('%Y-%m-%d') }} (Expired)</span>
+                                {% elif item.is_expiring_soon %}
+                                <span class="expiring-soon">{{ item.expiry_date.strftime('%Y-%m-%d') }}</span>
                                 {% else %}
-                                    N/A
+                                {{ item.expiry_date.strftime('%Y-%m-%d') }}
+                                {% endif %}
+                                {% else %}
+                                N/A
                                 {% endif %}
                             </td>
                             <td>
@@ -143,10 +152,12 @@
                             </td>
                             <td>
                                 <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editInventoryModal-{{ item.id }}">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                        data-bs-target="#editInventoryModal-{{ item.id }}">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteInventoryModal-{{ item.id }}">
+                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deleteInventoryModal-{{ item.id }}">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -162,32 +173,35 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Add Inventory Modal -->
-    <div class="modal fade" id="addInventoryModal" tabindex="-1" aria-labelledby="addInventoryModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addInventoryModal" tabindex="-1" aria-labelledby="addInventoryModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addInventoryModalLabel">Add Inventory Item</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ url_for('admin.add_inventory_item') }}" method="POST" class="needs-validation donation-form" novalidate>
+                <form action="{{ url_for('admin.add_inventory_item') }}" method="POST"
+                    class="needs-validation donation-form" novalidate>
                     <div class="modal-body">
                         {{ form.hidden_tag() }}
-                        
+
                         <div class="mb-3">
                             <label for="type" class="form-label">Item Type</label>
                             {{ form.type(class="form-select", id="type") }}
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
-                            {{ form.description(class="form-control", id="description", placeholder="Enter item description") }}
+                            {{ form.description(class="form-control", id="description", placeholder="Enter item
+                            description") }}
                             <div class="invalid-feedback">
                                 Please provide a description.
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="quantity" class="form-label">Quantity</label>
@@ -196,7 +210,7 @@
                                     Please provide a quantity.
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-6 mb-3">
                                 <label for="unit" class="form-label">Unit</label>
                                 {{ form.unit(class="form-control", id="unit", placeholder="e.g., kg, pcs") }}
@@ -205,7 +219,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3" id="expiry_date_group">
                             <label for="expiry_date" class="form-label">Expiry Date (for food items)</label>
                             {{ form.expiry_date(class="form-control", id="expiry_date", type="date") }}
@@ -213,7 +227,7 @@
                                 Please provide an expiry date for food items.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="evacuation_center_id" class="form-label">Evacuation Center</label>
                             {{ form.evacuation_center_id(class="form-select", id="evacuation_center_id") }}
@@ -221,7 +235,7 @@
                                 Please select an evacuation center.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="status" class="form-label">Status</label>
                             {{ form.status(class="form-select", id="status") }}
@@ -235,82 +249,95 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Edit Inventory Modals -->
     {% for item in inventory_items %}
-    <div class="modal fade" id="editInventoryModal-{{ item.id }}" tabindex="-1" aria-labelledby="editInventoryModalLabel-{{ item.id }}" aria-hidden="true">
+    <div class="modal fade" id="editInventoryModal-{{ item.id }}" tabindex="-1"
+        aria-labelledby="editInventoryModalLabel-{{ item.id }}" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editInventoryModalLabel-{{ item.id }}">Edit Inventory Item</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ url_for('admin.edit_inventory_item', item_id=item.id) }}" method="POST" class="needs-validation donation-form" novalidate>
+                <form action="{{ url_for('admin.edit_inventory_item', item_id=item.id) }}" method="POST"
+                    class="needs-validation donation-form" novalidate>
                     <div class="modal-body">
                         {{ form.hidden_tag() }}
-                        
+
                         <div class="mb-3">
                             <label for="type-{{ item.id }}" class="form-label">Item Type</label>
                             <select class="form-select" id="type-{{ item.id }}" name="type">
-                                <option value="food" {% if item.type == 'food' %}selected{% endif %}>Food</option>
-                                <option value="non-food" {% if item.type == 'non-food' %}selected{% endif %}>Non-Food</option>
+                                <option value="food" {% if item.type=='food' %}selected{% endif %}>Food</option>
+                                <option value="non-food" {% if item.type=='non-food' %}selected{% endif %}>Non-Food
+                                </option>
                             </select>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="description-{{ item.id }}" class="form-label">Description</label>
-                            <textarea class="form-control" id="description-{{ item.id }}" name="description" placeholder="Enter item description" required>{{ item.description }}</textarea>
+                            <textarea class="form-control" id="description-{{ item.id }}" name="description"
+                                placeholder="Enter item description" required>{{ item.description }}</textarea>
                             <div class="invalid-feedback">
                                 Please provide a description.
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="quantity-{{ item.id }}" class="form-label">Quantity</label>
-                                <input type="number" class="form-control" id="quantity-{{ item.id }}" name="quantity" value="{{ item.quantity }}" min="1" required>
+                                <input type="number" class="form-control" id="quantity-{{ item.id }}" name="quantity"
+                                    value="{{ item.quantity }}" min="1" required>
                                 <div class="invalid-feedback">
                                     Please provide a quantity.
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-6 mb-3">
                                 <label for="unit-{{ item.id }}" class="form-label">Unit</label>
-                                <input type="text" class="form-control" id="unit-{{ item.id }}" name="unit" value="{{ item.unit }}" placeholder="e.g., kg, pcs" required>
+                                <input type="text" class="form-control" id="unit-{{ item.id }}" name="unit"
+                                    value="{{ item.unit }}" placeholder="e.g., kg, pcs" required>
                                 <div class="invalid-feedback">
                                     Please provide a unit.
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="mb-3" id="expiry_date_group-{{ item.id }}" style="{% if item.type != 'food' %}display: none;{% endif %}">
+
+                        <div class="mb-3" id="expiry_date_group-{{ item.id }}"
+                            style="{% if item.type != 'food' %}display: none;{% endif %}">
                             <label for="expiry_date-{{ item.id }}" class="form-label">Expiry Date</label>
-                            <input type="date" class="form-control" id="expiry_date-{{ item.id }}" name="expiry_date" value="{{ item.expiry_date }}" {% if item.type == 'food' %}required{% endif %}>
+                            <input type="date" class="form-control" id="expiry_date-{{ item.id }}" name="expiry_date"
+                                value="{{ item.expiry_date }}" {% if item.type=='food' %}required{% endif %}>
                             <div class="invalid-feedback">
                                 Please provide an expiry date for food items.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="evacuation_center_id-{{ item.id }}" class="form-label">Evacuation Center</label>
-                            <select class="form-select" id="evacuation_center_id-{{ item.id }}" name="evacuation_center_id" required>
+                            <select class="form-select" id="evacuation_center_id-{{ item.id }}"
+                                name="evacuation_center_id" required>
                                 {% for center in centers if centers is defined %}
-                                    <option value="{{ center.id }}" {% if item.evacuation_center_id == center.id %}selected{% endif %}>
-                                        {{ center.name }}
-                                    </option>
+                                <option value="{{ center.id }}" {% if item.evacuation_center_id==center.id %}selected{%
+                                    endif %}>
+                                    {{ center.name }}
+                                </option>
                                 {% endfor %}
                             </select>
                             <div class="invalid-feedback">
                                 Please select an evacuation center.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="status-{{ item.id }}" class="form-label">Status</label>
                             <select class="form-select" id="status-{{ item.id }}" name="status">
-                                <option value="available" {% if item.status == 'available' %}selected{% endif %}>Available</option>
-                                <option value="distributed" {% if item.status == 'distributed' %}selected{% endif %}>Distributed</option>
-                                <option value="expired" {% if item.status == 'expired' %}selected{% endif %}>Expired</option>
+                                <option value="available" {% if item.status=='available' %}selected{% endif %}>Available
+                                </option>
+                                <option value="distributed" {% if item.status=='distributed' %}selected{% endif %}>
+                                    Distributed</option>
+                                <option value="expired" {% if item.status=='expired' %}selected{% endif %}>Expired
+                                </option>
                             </select>
                         </div>
                     </div>
@@ -322,9 +349,10 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Delete Inventory Modal -->
-    <div class="modal fade" id="deleteInventoryModal-{{ item.id }}" tabindex="-1" aria-labelledby="deleteInventoryModalLabel-{{ item.id }}" aria-hidden="true">
+    <div class="modal fade" id="deleteInventoryModal-{{ item.id }}" tabindex="-1"
+        aria-labelledby="deleteInventoryModalLabel-{{ item.id }}" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -346,7 +374,7 @@
         </div>
     </div>
     {% endfor %}
-    
+
     {% else %}
     <!-- Donations Table -->
     <div class="card">
@@ -373,18 +401,24 @@
                             <td>{{ donation.quantity }} {{ donation.unit }}</td>
                             <td>{{ donation.donor.full_name if donation.donor else 'Anonymous' }}</td>
                             <td>{{ donation.evacuation_center.name }}</td>
-                            <td>{{ donation.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ donation.created_at.strftime('%Y-%m-%d') if donation.created_at else 'N/A' }}</td>
                             <td>
                                 <span class="status-indicator status-{{ donation.status }}"></span>
                                 {{ donation.status|capitalize }}
                             </td>
                             <td>
                                 <div class="btn-group">
-                                    <form action="{{ url_for('admin.update_donation_status', donation_id=donation.id) }}" method="POST" class="status-update-form">
-                                        <select class="form-select form-select-sm" name="status" data-original-value="{{ donation.status }}">
-                                            <option value="pending" {% if donation.status == 'pending' %}selected{% endif %}>Pending</option>
-                                            <option value="received" {% if donation.status == 'received' %}selected{% endif %}>Received</option>
-                                            <option value="distributed" {% if donation.status == 'distributed' %}selected{% endif %}>Distributed</option>
+                                    <form
+                                        action="{{ url_for('admin.update_donation_status', donation_id=donation.id) }}"
+                                        method="POST" class="status-update-form">
+                                        <select class="form-select form-select-sm" name="status"
+                                            data-original-value="{{ donation.status }}">
+                                            <option value="pending" {% if donation.status=='pending' %}selected{% endif
+                                                %}>Pending</option>
+                                            <option value="received" {% if donation.status=='received' %}selected{%
+                                                endif %}>Received</option>
+                                            <option value="distributed" {% if donation.status=='distributed'
+                                                %}selected{% endif %}>Distributed</option>
                                         </select>
                                     </form>
                                 </div>
@@ -400,32 +434,35 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Add Donation Modal -->
-    <div class="modal fade" id="addDonationModal" tabindex="-1" aria-labelledby="addDonationModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addDonationModal" tabindex="-1" aria-labelledby="addDonationModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addDonationModalLabel">Add Donation</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ url_for('admin.add_donation') }}" method="POST" class="needs-validation donation-form" novalidate>
+                <form action="{{ url_for('admin.add_donation') }}" method="POST" class="needs-validation donation-form"
+                    novalidate>
                     <div class="modal-body">
                         {{ form.hidden_tag() }}
-                        
+
                         <div class="mb-3">
                             <label for="type" class="form-label">Donation Type</label>
                             {{ form.type(class="form-select", id="type") }}
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
-                            {{ form.description(class="form-control", id="description", placeholder="Enter donation description") }}
+                            {{ form.description(class="form-control", id="description", placeholder="Enter donation
+                            description") }}
                             <div class="invalid-feedback">
                                 Please provide a description.
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="quantity" class="form-label">Quantity</label>
@@ -434,7 +471,7 @@
                                     Please provide a quantity.
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-6 mb-3">
                                 <label for="unit" class="form-label">Unit</label>
                                 {{ form.unit(class="form-control", id="unit", placeholder="e.g., kg, pcs") }}
@@ -443,7 +480,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3" id="expiry_date_group">
                             <label for="expiry_date" class="form-label">Expiry Date (for food items)</label>
                             {{ form.expiry_date(class="form-control", id="expiry_date", type="date") }}
@@ -451,7 +488,7 @@
                                 Please provide an expiry date for food items.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="evacuation_center_id" class="form-label">Evacuation Center</label>
                             {{ form.evacuation_center_id(class="form-select", id="evacuation_center_id") }}
@@ -468,7 +505,7 @@
             </div>
         </div>
     </div>
-    
+
     {% endif %}
 </div>
 {% endblock %}

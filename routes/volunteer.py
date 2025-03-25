@@ -53,7 +53,8 @@ def dashboard():
         expiring_food=expiring_food,
         centers=centers,
         families=families,
-        donations=donations
+        donations=donations,
+        now=datetime.now
     )
 
 # Evacuee Management for Volunteers
@@ -206,11 +207,16 @@ def donations():
     if donation_type in ['food', 'non-food']:
         query = query.filter(Donation.type == donation_type)
         
+         # Handle status filter
+    status = request.args.get('status')
+    if status in ['pending', 'received', 'distributed']:
+        query = query.filter(Donation.status == status)
+        
     # Get filtered donations and inventory items
     donations = query.order_by(Donation.created_at.desc()).all()
     inventory_items = InventoryItem.query.all()
     
-    return render_template('volunteer/donations.html', donations=donations)
+    return render_template('volunteer/donations.html', donations=donations, inventory_items=inventory_items)
 def donations():
     donations = Donation.query.all()
     inventory_items = InventoryItem.query.all()
@@ -290,4 +296,5 @@ def report_expiring():
     
     return render_template('volunteer/donations.html', 
                           expiring_food=expiring_food,
-                          showing_expiring=True)
+                          showing_expiring=True,
+                          now=datetime.now)

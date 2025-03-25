@@ -255,21 +255,27 @@ def add_evacuee():
 @login_required
 def edit_evacuee(evacuee_id):
     evacuee = Evacuee.query.get_or_404(evacuee_id)
-    families = Family.query.all()
-    centers = EvacuationCenter.query.filter_by(status='active').all()
     form = EvacueeForm(obj=evacuee)
 
     # Populate dropdown options
-    form.evacuation_center_id.choices = [(c.id, c.name) for c in centers]
-    form.family_id.choices = [(0, 'None')] + [(f.id, f.family_name) for f in families]
+    form.evacuation_center_id.choices = [(c.id, c.name) for c in EvacuationCenter.query.filter_by(status='active').all()]
+    form.family_id.choices = [(0, 'None')] + [(f.id, f.family_name) for f in Family.query.all()]
 
-    # Pass families and centers to template
-    return render_template('admin/evacuees.html', 
-                         form=form, 
-                         evacuee=evacuee, 
-                         families=families,
-                         centers=centers,
-                         editing=True)
+    if form.validate_on_submit():
+        evacuee.first_name = form.first_name.data
+        evacuee.last_name = form.last_name.data
+        evacuee.date_of_birth = form.date_of_birth.data
+        evacuee.gender = form.gender.data
+        evacuee.status = form.status.data
+        evacuee.special_needs = form.special_needs.data
+        evacuee.family_id = form.family_id.data if form.family_id.data != 0 else None
+        evacuee.evacuation_center_id = form.evacuation_center_id.data
+
+        db.session.commit()
+        flash('Evacuee updated successfully!', 'success')
+        return redirect(url_for('admin.evacuees'))
+
+    return render_template('admin/edit_evacuee.html', form=form, evacuee=evacuee)
 
     if form.validate_on_submit():
         evacuee.first_name = form.first_name.data
@@ -383,7 +389,7 @@ def edit_family(family_id):
     else:
         form.head_of_family_id.data = 0
 
-    return render_template('admin/evacuees.html', form=form, editing_family=True, family=family, show_families=True)
+    return render_template('admin/edit_family.html', form=form, family=family)
 
 @admin_bp.route('/families/delete/<int:family_id>', methods=['POST'])
 @login_required
@@ -583,6 +589,7 @@ def users():
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
     form = UserManagementForm(obj=user)
+    search_form = SearchForm()
 
     if form.validate_on_submit():
         user.role = form.role.data
@@ -593,7 +600,7 @@ def edit_user(user_id):
         flash('User updated successfully!', 'success')
         return redirect(url_for('admin.users'))
 
-    return render_template('admin/users.html', form=form, editing=True, user=user)
+    return render_template('admin/edit_user.html', form=form, user=user)
 
 @admin_bp.route('/users/activate/<int:user_id>', methods=['POST'])
 @login_required

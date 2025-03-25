@@ -177,7 +177,8 @@
                                             {{ evacuee.status|capitalize }}
                                         </span>
                                     </td>
-                                    <td>{{ evacuee.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ evacuee.created_at.strftime('%Y-%m-%d') if evacuee.created_at else 'N/A' }}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
