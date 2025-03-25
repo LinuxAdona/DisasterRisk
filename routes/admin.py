@@ -18,19 +18,33 @@ def dashboard():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('common.index'))
 
-    # Get summary data for dashboard
-    total_centers = EvacuationCenter.query.count()
-    total_evacuees = Evacuee.query.count()
-    total_families = Family.query.count()
-    total_donations = Donation.query.count()
+    # Center statistics
+    center_count = EvacuationCenter.query.count()
+    active_center_count = EvacuationCenter.query.filter_by(status='active').count()
 
-    # Get recent activities
+    # Evacuee and family statistics
+    evacuee_count = Evacuee.query.count()
+    family_count = Family.query.count()
+
+    # Donation statistics
+    donation_count = Donation.query.count()
+    pending_donation_count = Donation.query.filter_by(status='pending').count()
+
+    # Inventory statistics
+    inventory_count = InventoryItem.query.count()
+    expiring_inventory_count = InventoryItem.query.filter(
+        InventoryItem.type == 'food',
+        InventoryItem.expiry_date <= (datetime.now() + timedelta(days=7)).date(),
+        InventoryItem.status == 'available'
+    ).count()
+
+    # Recent users for the table
+    recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
+
+    # Recent activities
     recent_centers = EvacuationCenter.query.order_by(EvacuationCenter.created_at.desc()).limit(5).all()
     recent_evacuees = Evacuee.query.order_by(Evacuee.created_at.desc()).limit(5).all()
     recent_donations = Donation.query.order_by(Donation.created_at.desc()).limit(5).all()
-
-    # Get users pending approval
-    pending_users = User.query.filter_by(is_active=False).all()
 
     # Get centers at capacity
     centers_at_capacity = []
@@ -56,20 +70,30 @@ def dashboard():
         Donation.type, func.count(Donation.id)
     ).group_by(Donation.type).all()
 
+    # Prepare center data for occupancy chart
+    centers_data = []
+    for center in EvacuationCenter.query.filter_by(status='active').all():
+        centers_data.append({
+            'name': center.name,
+            'current_occupancy': center.current_occupancy,
+            'capacity': center.capacity
+        })
+
     return render_template(
-        'admin/dashboard.html', 
-        total_centers=total_centers,
-        total_evacuees=total_evacuees,
-        total_families=total_families,
-        total_donations=total_donations,
+        'admin/dashboard.html',
+        center_count=center_count,
+        active_center_count=active_center_count,
+        evacuee_count=evacuee_count,
+        family_count=family_count,
+        donation_count=donation_count,
+        pending_donation_count=pending_donation_count,
+        inventory_count=inventory_count,
+        expiring_inventory_count=expiring_inventory_count,
+        recent_users=recent_users,
         recent_centers=recent_centers,
         recent_evacuees=recent_evacuees,
         recent_donations=recent_donations,
-        pending_users=pending_users,
-        centers_at_capacity=centers_at_capacity,
-        expiring_food=expiring_food,
-        evacuee_status=dict(evacuee_status),
-        donation_types=dict(donation_types)
+        centers_data=centers_data
     )
 
 # Evacuation Center Management
@@ -292,13 +316,20 @@ def delete_evacuee(evacuee_id):
 @login_required
 def families():
     families = Family.query.all()
-    form = SearchForm()
+    search_form = SearchForm()
+    form = FamilyForm()  # For the add/edit modal
 
-    if form.validate_on_submit():
-        search_term = form.query.data
+    evacuees = Evacuee.query.all()
+    form.head_of_family_id.choices = [(0, 'None')] + [(e.id, f"{e.first_name} {e.last_name}") for e in evacuees]
+
+    if search_form.validate_on_submit():
+        search_term = search_form.query.data
         families = Family.query.filter(Family.family_name.ilike(f'%{search_term}%')).all()
 
-    return render_template('admin/evacuees.html', families=families, form=form, show_families=True)
+    return render_template('admin/families.html', 
+                         families=families, 
+                         search_form=search_form,
+                         form=form)
 
 @admin_bp.route('/families/add', methods=['GET', 'POST'])
 @login_required
@@ -453,13 +484,18 @@ def update_donation_status(donation_id):
 @login_required
 def inventory():
     inventory_items = InventoryItem.query.all()
-    form = SearchForm()
+    search_form = SearchForm()
+    form = InventoryItemForm()  # For the add/edit modal
 
-    if form.validate_on_submit():
-        search_term = form.query.data
+    if search_form.validate_on_submit():
+        search_term = search_form.query.data
         inventory_items = InventoryItem.query.filter(InventoryItem.description.ilike(f'%{search_term}%')).all()
 
-    return render_template('admin/donations.html', inventory_items=inventory_items, form=form, show_inventory=True)
+    return render_template('admin/donations.html', 
+                         inventory_items=inventory_items,
+                         search_form=search_form,
+                         form=form,
+                         show_inventory=True)
 
 @admin_bp.route('/inventory/add', methods=['GET', 'POST'])
 @login_required

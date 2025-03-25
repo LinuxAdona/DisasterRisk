@@ -137,7 +137,7 @@
                 </div>
                 <div class="card-body">
                     <div class="chart-container">
-                        <canvas id="centerOccupancyChart"></canvas>
+                        <canvas id="centerOccupancyChart" data-centers='{{ centers_data|tojson|safe }}'></canvas>
                     </div>
                 </div>
             </div>

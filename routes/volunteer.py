@@ -38,7 +38,10 @@ def dashboard():
         InventoryItem.expiry_date >= datetime.now().date(),
         InventoryItem.status == 'available'
     ).order_by(InventoryItem.expiry_date).all()
-    
+
+    centers = EvacuationCenter.query.filter_by(status='active').all()
+    families = Family.query.all()
+    donations = Donation.query.order_by(Donation.created_at.desc()).limit(5).all()
     return render_template(
         'volunteer/dashboard.html', 
         total_centers=total_centers,
@@ -47,7 +50,10 @@ def dashboard():
         recent_evacuees=recent_evacuees,
         recent_donations=recent_donations,
         centers_at_capacity=centers_at_capacity,
-        expiring_food=expiring_food
+        expiring_food=expiring_food,
+        centers=centers,
+        families=families,
+        donations=donations
     )
 
 # Evacuee Management for Volunteers
@@ -57,6 +63,7 @@ def evacuees():
     query = request.args.get('query', '')
     status = request.args.get('status', '')
     center_id = request.args.get('center_id', '')
+    edit_id = request.args.get('edit', type=int)
     
     evacuees_query = Evacuee.query
     
@@ -77,18 +84,31 @@ def evacuees():
     centers = EvacuationCenter.query.all()
     families = Family.query.all()
     search_form = SearchForm()
-    evacuee_form = EvacueeForm()
     
-    # Load form choices
-    evacuee_form.evacuation_center_id.choices = [(c.id, c.name) for c in centers]
-    evacuee_form.family_id.choices = [(0, 'No Family')] + [(f.id, f.family_name) for f in families]
+    # Create form and populate choices
+    form = EvacueeForm()
+    form.evacuation_center_id.choices = [(c.id, c.name) for c in centers]
+    form.family_id.choices = [(0, 'No Family')] + [(f.id, f.family_name) for f in families]
+    
+    # If editing, populate form with evacuee data
+    editing = None
+    if edit_id:
+        editing = Evacuee.query.get_or_404(edit_id)
+        form = EvacueeForm(obj=editing)
+        form.evacuation_center_id.choices = [(c.id, c.name) for c in centers]
+        form.family_id.choices = [(0, 'No Family')] + [(f.id, f.family_name) for f in families]
+        if editing.family_id:
+            form.family_id.data = editing.family_id
+        else:
+            form.family_id.data = 0
     
     return render_template('volunteer/evacuees.html',
                          evacuees=evacuees,
                          centers=centers,
                          families=families,
                          search_form=search_form,
-                         form=evacuee_form)
+                         form=form,
+                         editing=editing)
 
 @volunteer_bp.route('/evacuees/add', methods=['GET', 'POST'])
 @login_required
