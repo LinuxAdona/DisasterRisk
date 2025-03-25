@@ -1,55 +1,45 @@
 {% extends 'base.html' %}
 
-{% block title %}Evacuation Centers - Admin Dashboard{% endblock %}
+{% block title %}Evacuation Centers - Disaster Risk Information Management System{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Evacuation Centers</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCenterModal">
-            <i class="fas fa-plus me-1"></i> Add Center
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCenterModal">
+            <i class="fas fa-plus me-1"></i> Add New Center
         </button>
     </div>
-    
-    <!-- Search and Filter -->
+
+    <!-- Search Box -->
     <div class="card mb-4">
         <div class="card-body">
-            <form action="{{ url_for('admin.centers') }}" method="GET" class="row g-3">
-                <div class="col-md-4">
+            <form method="GET" action="{{ url_for('admin.centers') }}" class="row g-3">
+                <div class="col-md-8">
                     <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search centers..." name="query" value="{{ request.args.get('query', '') }}">
-                        <button class="btn btn-outline-secondary" type="submit">
-                            <i class="fas fa-search"></i>
+                        {{ search_form.query(class="form-control", placeholder="Search by name or address") }}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
                         </button>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <select class="form-select" name="status">
-                        <option value="">All Statuses</option>
-                        <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Active</option>
-                        <option value="closed" {% if request.args.get('status') == 'closed' %}selected{% endif %}>Closed</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" name="capacity">
-                        <option value="">All Capacities</option>
-                        <option value="low" {% if request.args.get('capacity') == 'low' %}selected{% endif %}>Low (<50)</option>
-                        <option value="medium" {% if request.args.get('capacity') == 'medium' %}selected{% endif %}>Medium (50-100)</option>
-                        <option value="high" {% if request.args.get('capacity') == 'high' %}selected{% endif %}>High (>100)</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                <div class="col-md-4 text-md-end">
+                    <a href="{{ url_for('admin.centers') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-undo"></i> Reset
+                    </a>
                 </div>
             </form>
         </div>
     </div>
-    
-    <!-- Centers Table -->
+
     <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Evacuation Centers List</h5>
+        </div>
         <div class="card-body">
+            {% if centers %}
             <div class="table-responsive">
-                <table class="table table-hover datatable">
+                <table class="table table-hover table-striped">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -58,6 +48,7 @@
                             <th>Occupancy</th>
                             <th>Status</th>
                             <th>Contact Person</th>
+                            <th>Contact Number</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -68,57 +59,105 @@
                             <td>{{ center.address }}</td>
                             <td>{{ center.capacity }}</td>
                             <td>
-                                {{ center.current_occupancy }}
-                                <div class="progress" style="height: 5px;">
-                                    {% set occupancy_percent = (center.current_occupancy / center.capacity) * 100 if center.capacity > 0 else 0 %}
+                                <div class="progress" style="height: 20px;"
+                                    title="{{ center.current_occupancy }} / {{ center.capacity }}">
+                                    {% set occupancy_percent = (center.current_occupancy / center.capacity * 100) if
+                                    center.capacity > 0 else 0 %}
                                     <div class="progress-bar 
-                                        {% if occupancy_percent >= 90 %}bg-danger
-                                        {% elif occupancy_percent >= 70 %}bg-warning
-                                        {% else %}bg-success{% endif %}"
-                                        role="progressbar" style="width: {{ occupancy_percent }}%"
-                                        aria-valuenow="{{ occupancy_percent }}" aria-valuemin="0" aria-valuemax="100">
+                                                {% if occupancy_percent > 90 %}bg-danger
+                                                {% elif occupancy_percent > 75 %}bg-warning
+                                                {% else %}bg-success{% endif %}" role="progressbar"
+                                        style="width: {{ occupancy_percent }}%"
+                                        aria-valuenow="{{ center.current_occupancy }}" aria-valuemin="0"
+                                        aria-valuemax="{{ center.capacity }}">
+                                        {{ center.current_occupancy }} / {{ center.capacity }}
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <span class="status-indicator status-{{ center.status }}"></span>
-                                {{ center.status | capitalize }}
+                                <span
+                                    class="badge {% if center.status == 'active' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ center.status|capitalize }}
+                                </span>
                             </td>
-                            <td>{{ center.contact_person if center.contact_person else 'N/A' }}</td>
+                            <td>{{ center.contact_person or 'N/A' }}</td>
+                            <td>{{ center.contact_number or 'N/A' }}</td>
                             <td>
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editCenterModal-{{ center.id }}">
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('admin.edit_center', center_id=center.id) }}"
+                                        class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteCenterModal-{{ center.id }}">
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deleteCenterModal-{{ center.id }}">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
+
+                                <!-- Delete Center Modal -->
+                                <div class="modal fade" id="deleteCenterModal-{{ center.id }}" tabindex="-1"
+                                    aria-labelledby="deleteCenterModalLabel-{{ center.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteCenterModalLabel-{{ center.id }}">
+                                                    Confirm Deletion</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to delete the evacuation center: <strong>{{
+                                                        center.name }}</strong>?</p>
+                                                <p class="text-danger">This action cannot be undone! All associated data
+                                                    will be lost.</p>
+                                                {% if center.current_occupancy > 0 %}
+                                                <div class="alert alert-warning">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i> This center
+                                                    currently has {{ center.current_occupancy }} evacuees. You must
+                                                    relocate them before deleting.
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('admin.delete_center', center_id=center.id) }}"
+                                                    method="POST">
+                                                    <button type="submit" class="btn btn-danger" {% if
+                                                        center.current_occupancy> 0 %}disabled{% endif %}>
+                                                        Delete Center
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="7" class="text-center">No evacuation centers found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-1"></i> No evacuation centers found. Create a new one to get started.
+            </div>
+            {% endif %}
         </div>
     </div>
-    
+
     <!-- Add Center Modal -->
     <div class="modal fade" id="addCenterModal" tabindex="-1" aria-labelledby="addCenterModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addCenterModalLabel">Add Evacuation Center</h5>
+                    <h5 class="modal-title" id="addCenterModalLabel">Add New Evacuation Center</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="{{ url_for('admin.add_center') }}" method="POST" class="needs-validation" novalidate>
                     <div class="modal-body">
                         {{ form.hidden_tag() }}
-                        
+
                         <div class="mb-3">
                             <label for="name" class="form-label">Center Name</label>
                             {{ form.name(class="form-control", id="name", placeholder="Enter center name") }}
@@ -126,36 +165,39 @@
                                 Please provide a center name.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="address" class="form-label">Address</label>
-                            {{ form.address(class="form-control", id="address", placeholder="Enter center address") }}
+                            {{ form.address(class="form-control", id="address", placeholder="Enter address") }}
                             <div class="invalid-feedback">
                                 Please provide an address.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="capacity" class="form-label">Capacity</label>
-                            {{ form.capacity(class="form-control", id="capacity", placeholder="Enter capacity") }}
+                            {{ form.capacity(class="form-control", id="capacity", placeholder="Enter capacity", min="1")
+                            }}
                             <div class="invalid-feedback">
-                                Please provide a capacity number.
+                                Please provide a valid capacity (minimum 1).
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="status" class="form-label">Status</label>
                             {{ form.status(class="form-select", id="status") }}
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="contact_person" class="form-label">Contact Person</label>
-                            {{ form.contact_person(class="form-control", id="contact_person", placeholder="Enter contact person name") }}
+                            {{ form.contact_person(class="form-control", id="contact_person", placeholder="Enter contact
+                            person name") }}
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="contact_number" class="form-label">Contact Number</label>
-                            {{ form.contact_number(class="form-control", id="contact_number", placeholder="Enter contact number") }}
+                            {{ form.contact_number(class="form-control", id="contact_number", placeholder="Enter contact
+                            number") }}
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -166,99 +208,30 @@
             </div>
         </div>
     </div>
-    
-    <!-- Edit Center Modals -->
-    {% for center in centers %}
-    <div class="modal fade" id="editCenterModal-{{ center.id }}" tabindex="-1" aria-labelledby="editCenterModalLabel-{{ center.id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editCenterModalLabel-{{ center.id }}">Edit Evacuation Center</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="{{ url_for('admin.edit_center', center_id=center.id) }}" method="POST" class="needs-validation" novalidate>
-                    <div class="modal-body">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="mb-3">
-                            <label for="name-{{ center.id }}" class="form-label">Center Name</label>
-                            <input type="text" class="form-control" id="name-{{ center.id }}" name="name" value="{{ center.name }}" required>
-                            <div class="invalid-feedback">
-                                Please provide a center name.
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="address-{{ center.id }}" class="form-label">Address</label>
-                            <input type="text" class="form-control" id="address-{{ center.id }}" name="address" value="{{ center.address }}" required>
-                            <div class="invalid-feedback">
-                                Please provide an address.
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="capacity-{{ center.id }}" class="form-label">Capacity</label>
-                            <input type="number" class="form-control" id="capacity-{{ center.id }}" name="capacity" value="{{ center.capacity }}" required>
-                            <div class="invalid-feedback">
-                                Please provide a capacity number.
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="status-{{ center.id }}" class="form-label">Status</label>
-                            <select class="form-select" id="status-{{ center.id }}" name="status">
-                                <option value="active" {% if center.status == 'active' %}selected{% endif %}>Active</option>
-                                <option value="closed" {% if center.status == 'closed' %}selected{% endif %}>Closed</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="contact_person-{{ center.id }}" class="form-label">Contact Person</label>
-                            <input type="text" class="form-control" id="contact_person-{{ center.id }}" name="contact_person" value="{{ center.contact_person }}">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="contact_number-{{ center.id }}" class="form-label">Contact Number</label>
-                            <input type="text" class="form-control" id="contact_number-{{ center.id }}" name="contact_number" value="{{ center.contact_number }}">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Delete Center Modal -->
-    <div class="modal fade" id="deleteCenterModal-{{ center.id }}" tabindex="-1" aria-labelledby="deleteCenterModalLabel-{{ center.id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteCenterModalLabel-{{ center.id }}">Confirm Deletion</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete the evacuation center <strong>{{ center.name }}</strong>?</p>
-                    {% if center.evacuees %}
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Warning: This center currently has {{ center.evacuees|length }} evacuees. You must relocate them before deletion.
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form action="{{ url_for('admin.delete_center', center_id=center.id) }}" method="POST">
-                        <button type="submit" class="btn btn-danger" {% if center.evacuees %}disabled{% endif %}>
-                            <i class="fas fa-trash me-1"></i> Delete
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Form validation
+    (function () {
+        'use strict';
+
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.querySelectorAll('.needs-validation');
+
+        // Loop over them and prevent submission
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+
+                    form.classList.add('was-validated');
+                }, false);
+            });
+    })();
+</script>
 {% endblock %}

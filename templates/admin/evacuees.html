@@ -8,63 +8,70 @@
         <h1>{% if show_families %}Families{% else %}Evacuees{% endif %}</h1>
         <div>
             {% if show_families %}
-                <a href="{{ url_for('admin.evacuees') }}" class="btn btn-outline-info me-2">
-                    <i class="fas fa-users me-1"></i> View Evacuees
-                </a>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFamilyModal">
-                    <i class="fas fa-plus me-1"></i> Add Family
-                </button>
+            <a href="{{ url_for('admin.evacuees') }}" class="btn btn-outline-info me-2">
+                <i class="fas fa-users me-1"></i> View Evacuees
+            </a>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFamilyModal">
+                <i class="fas fa-plus me-1"></i> Add Family
+            </button>
             {% else %}
-                <a href="{{ url_for('admin.families') }}" class="btn btn-outline-info me-2">
-                    <i class="fas fa-users me-1"></i> View Families
-                </a>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEvacueeModal">
-                    <i class="fas fa-plus me-1"></i> Add Evacuee
-                </button>
+            <a href="{{ url_for('admin.families') }}" class="btn btn-outline-info me-2">
+                <i class="fas fa-users me-1"></i> View Families
+            </a>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEvacueeModal">
+                <i class="fas fa-plus me-1"></i> Add Evacuee
+            </button>
             {% endif %}
         </div>
     </div>
-    
+
     <!-- Search and Filter -->
     <div class="card mb-4">
         <div class="card-body">
-            <form action="{{ url_for('admin.evacuees' if not show_families else 'admin.families') }}" method="GET" class="row g-3">
+            <form action="{{ url_for('admin.evacuees' if not show_families else 'admin.families') }}" method="GET"
+                class="row g-3">
                 <div class="col-md-4">
                     <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search..." name="query" value="{{ request.args.get('query', '') }}">
+                        <input type="text" class="form-control" placeholder="Search..." name="query"
+                            value="{{ request.args.get('query', '') }}">
                         <button class="btn btn-outline-secondary" type="submit">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
                 </div>
-                
+
                 {% if not show_families %}
                 <div class="col-md-3">
                     <select class="form-select" name="status">
                         <option value="">All Statuses</option>
-                        <option value="present" {% if request.args.get('status') == 'present' %}selected{% endif %}>Present</option>
-                        <option value="relocated" {% if request.args.get('status') == 'relocated' %}selected{% endif %}>Relocated</option>
-                        <option value="missing" {% if request.args.get('status') == 'missing' %}selected{% endif %}>Missing</option>
-                        <option value="deceased" {% if request.args.get('status') == 'deceased' %}selected{% endif %}>Deceased</option>
+                        <option value="present" {% if request.args.get('status')=='present' %}selected{% endif %}>
+                            Present</option>
+                        <option value="relocated" {% if request.args.get('status')=='relocated' %}selected{% endif %}>
+                            Relocated</option>
+                        <option value="missing" {% if request.args.get('status')=='missing' %}selected{% endif %}>
+                            Missing</option>
+                        <option value="deceased" {% if request.args.get('status')=='deceased' %}selected{% endif %}>
+                            Deceased</option>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <select class="form-select" name="center">
                         <option value="">All Centers</option>
                         {% for center in centers if centers is defined %}
-                            <option value="{{ center.id }}" {% if request.args.get('center')|int == center.id %}selected{% endif %}>{{ center.name }}</option>
+                        <option value="{{ center.id }}" {% if request.args.get('center')|int==center.id %}selected{%
+                            endif %}>{{ center.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 {% endif %}
-                
+
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">Filter</button>
                 </div>
             </form>
         </div>
     </div>
-    
+
     {% if show_families %}
     <!-- Families Table -->
     <div class="card">
@@ -91,10 +98,12 @@
                             <td>{{ family.contact_number if family.contact_number else 'N/A' }}</td>
                             <td>
                                 <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editFamilyModal-{{ family.id }}">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                        data-bs-target="#editFamilyModal-{{ family.id }}">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteFamilyModal-{{ family.id }}">
+                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deleteFamilyModal-{{ family.id }}">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -110,7 +119,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Add Family Modal -->
     <div class="modal fade" id="addFamilyModal" tabindex="-1" aria-labelledby="addFamilyModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -122,29 +131,31 @@
                 <form action="{{ url_for('admin.add_family') }}" method="POST" class="needs-validation" novalidate>
                     <div class="modal-body">
                         {{ form.hidden_tag() }}
-                        
+
                         <div class="mb-3">
                             <label for="family_name" class="form-label">Family Name</label>
-                            {{ form.family_name(class="form-control", id="family_name", placeholder="Enter family name") }}
+                            {{ form.family_name(class="form-control", id="family_name", placeholder="Enter family name")
+                            }}
                             <div class="invalid-feedback">
                                 Please provide a family name.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="head_of_family_id" class="form-label">Head of Family</label>
                             {{ form.head_of_family_id(class="form-select", id="head_of_family_id") }}
                             <div class="form-text">You can assign the head of family later.</div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="address" class="form-label">Home Address</label>
                             {{ form.address(class="form-control", id="address", placeholder="Enter home address") }}
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="contact_number" class="form-label">Contact Number</label>
-                            {{ form.contact_number(class="form-control", id="contact_number", placeholder="Enter contact number") }}
+                            {{ form.contact_number(class="form-control", id="contact_number", placeholder="Enter contact
+                            number") }}
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -155,48 +166,54 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Edit Family Modals -->
     {% for family in families %}
-    <div class="modal fade" id="editFamilyModal-{{ family.id }}" tabindex="-1" aria-labelledby="editFamilyModalLabel-{{ family.id }}" aria-hidden="true">
+    <div class="modal fade" id="editFamilyModal-{{ family.id }}" tabindex="-1"
+        aria-labelledby="editFamilyModalLabel-{{ family.id }}" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editFamilyModalLabel-{{ family.id }}">Edit Family</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ url_for('admin.edit_family', family_id=family.id) }}" method="POST" class="needs-validation" novalidate>
+                <form action="{{ url_for('admin.edit_family', family_id=family.id) }}" method="POST"
+                    class="needs-validation" novalidate>
                     <div class="modal-body">
                         {{ form.hidden_tag() }}
-                        
+
                         <div class="mb-3">
                             <label for="family_name-{{ family.id }}" class="form-label">Family Name</label>
-                            <input type="text" class="form-control" id="family_name-{{ family.id }}" name="family_name" value="{{ family.family_name }}" required>
+                            <input type="text" class="form-control" id="family_name-{{ family.id }}" name="family_name"
+                                value="{{ family.family_name }}" required>
                             <div class="invalid-feedback">
                                 Please provide a family name.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="head_of_family_id-{{ family.id }}" class="form-label">Head of Family</label>
                             <select class="form-select" id="head_of_family_id-{{ family.id }}" name="head_of_family_id">
                                 <option value="0">None</option>
                                 {% for evacuee in evacuees if evacuees is defined %}
-                                    <option value="{{ evacuee.id }}" {% if family.head_of_family_id == evacuee.id %}selected{% endif %}>
-                                        {{ evacuee.full_name }}
-                                    </option>
+                                <option value="{{ evacuee.id }}" {% if family.head_of_family_id==evacuee.id %}selected{%
+                                    endif %}>
+                                    {{ evacuee.full_name }}
+                                </option>
                                 {% endfor %}
                             </select>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="address-{{ family.id }}" class="form-label">Home Address</label>
-                            <input type="text" class="form-control" id="address-{{ family.id }}" name="address" value="{{ family.address }}">
+                            <input type="text" class="form-control" id="address-{{ family.id }}" name="address"
+                                value="{{ family.address }}">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="contact_number-{{ family.id }}" class="form-label">Contact Number</label>
-                            <input type="text" class="form-control" id="contact_number-{{ family.id }}" name="contact_number" value="{{ family.contact_number }}">
+                            <input type="text" class="form-control" id="contact_number-{{ family.id }}"
+                                name="contact_number" value="{{ family.contact_number }}">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -207,9 +224,10 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Delete Family Modal -->
-    <div class="modal fade" id="deleteFamilyModal-{{ family.id }}" tabindex="-1" aria-labelledby="deleteFamilyModalLabel-{{ family.id }}" aria-hidden="true">
+    <div class="modal fade" id="deleteFamilyModal-{{ family.id }}" tabindex="-1"
+        aria-labelledby="deleteFamilyModalLabel-{{ family.id }}" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -221,7 +239,8 @@
                     {% if family.members %}
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        Note: Family members will remain in the system but will no longer be associated with this family.
+                        Note: Family members will remain in the system but will no longer be associated with this
+                        family.
                     </div>
                     {% endif %}
                 </div>
@@ -237,7 +256,7 @@
         </div>
     </div>
     {% endfor %}
-    
+
     {% else %}
     <!-- Evacuees Table -->
     <div class="card">
@@ -263,7 +282,8 @@
                             <td>{{ evacuee.age if evacuee.age else 'N/A' }}</td>
                             <td>{{ evacuee.gender|capitalize if evacuee.gender else 'N/A' }}</td>
                             <td>{{ evacuee.family.family_name if evacuee.family else 'N/A' }}</td>
-                            <td>{{ evacuee.evacuation_center.name if evacuee.evacuation_center else 'Not assigned' }}</td>
+                            <td>{{ evacuee.evacuation_center.name if evacuee.evacuation_center else 'Not assigned' }}
+                            </td>
                             <td>
                                 <span class="status-indicator status-{{ evacuee.status }}"></span>
                                 {{ evacuee.status|capitalize }}
@@ -271,10 +291,12 @@
                             <td>{{ evacuee.special_needs if evacuee.special_needs else 'None' }}</td>
                             <td>
                                 <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editEvacueeModal-{{ evacuee.id }}">
+                                    <a href="{{ url_for('admin.edit_evacuee', evacuee_id=evacuee.id) }}"
+                                        class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteEvacueeModal-{{ evacuee.id }}">
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deleteEvacueeModal-{{ evacuee.id }}">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -290,9 +312,10 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Add Evacuee Modal -->
-    <div class="modal fade" id="addEvacueeModal" tabindex="-1" aria-labelledby="addEvacueeModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addEvacueeModal" tabindex="-1" aria-labelledby="addEvacueeModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -302,25 +325,27 @@
                 <form action="{{ url_for('admin.add_evacuee') }}" method="POST" class="needs-validation" novalidate>
                     <div class="modal-body">
                         {{ form.hidden_tag() }}
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="first_name" class="form-label">First Name</label>
-                                {{ form.first_name(class="form-control", id="first_name", placeholder="Enter first name") }}
+                                {{ form.first_name(class="form-control", id="first_name", placeholder="Enter first
+                                name") }}
                                 <div class="invalid-feedback">
                                     Please provide a first name.
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-6 mb-3">
                                 <label for="last_name" class="form-label">Last Name</label>
-                                {{ form.last_name(class="form-control", id="last_name", placeholder="Enter last name") }}
+                                {{ form.last_name(class="form-control", id="last_name", placeholder="Enter last name")
+                                }}
                                 <div class="invalid-feedback">
                                     Please provide a last name.
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="date_of_birth" class="form-label">Date of Birth</label>
@@ -329,13 +354,13 @@
                                     Please provide a valid date of birth.
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-6 mb-3">
                                 <label for="gender" class="form-label">Gender</label>
                                 {{ form.gender(class="form-select", id="gender") }}
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="evacuation_center_id" class="form-label">Evacuation Center</label>
                             {{ form.evacuation_center_id(class="form-select", id="evacuation_center_id") }}
@@ -343,20 +368,21 @@
                                 Please select an evacuation center.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="family_id" class="form-label">Family</label>
                             {{ form.family_id(class="form-select", id="family_id") }}
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="status" class="form-label">Status</label>
                             {{ form.status(class="form-select", id="status") }}
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="special_needs" class="form-label">Special Needs</label>
-                            {{ form.special_needs(class="form-control", id="special_needs", placeholder="Enter any special needs or medical conditions") }}
+                            {{ form.special_needs(class="form-control", id="special_needs", placeholder="Enter any
+                            special needs or medical conditions") }}
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -367,96 +393,113 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Edit Evacuee Modals -->
     {% for evacuee in evacuees %}
-    <div class="modal fade" id="editEvacueeModal-{{ evacuee.id }}" tabindex="-1" aria-labelledby="editEvacueeModalLabel-{{ evacuee.id }}" aria-hidden="true">
+    <div class="modal fade" id="editEvacueeModal-{{ evacuee.id }}" tabindex="-1"
+        aria-labelledby="editEvacueeModalLabel-{{ evacuee.id }}" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editEvacueeModalLabel-{{ evacuee.id }}">Edit Evacuee</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ url_for('admin.edit_evacuee', evacuee_id=evacuee.id) }}" method="POST" class="needs-validation" novalidate>
+                <form action="{{ url_for('admin.edit_evacuee', evacuee_id=evacuee.id) }}" method="POST"
+                    class="needs-validation" novalidate>
                     <div class="modal-body">
                         {{ form.hidden_tag() }}
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="first_name-{{ evacuee.id }}" class="form-label">First Name</label>
-                                <input type="text" class="form-control" id="first_name-{{ evacuee.id }}" name="first_name" value="{{ evacuee.first_name }}" required>
+                                <input type="text" class="form-control" id="first_name-{{ evacuee.id }}"
+                                    name="first_name" value="{{ evacuee.first_name }}" required>
                                 <div class="invalid-feedback">
                                     Please provide a first name.
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-6 mb-3">
                                 <label for="last_name-{{ evacuee.id }}" class="form-label">Last Name</label>
-                                <input type="text" class="form-control" id="last_name-{{ evacuee.id }}" name="last_name" value="{{ evacuee.last_name }}" required>
+                                <input type="text" class="form-control" id="last_name-{{ evacuee.id }}" name="last_name"
+                                    value="{{ evacuee.last_name }}" required>
                                 <div class="invalid-feedback">
                                     Please provide a last name.
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="date_of_birth-{{ evacuee.id }}" class="form-label">Date of Birth</label>
-                                <input type="date" class="form-control" id="date_of_birth-{{ evacuee.id }}" name="date_of_birth" value="{{ evacuee.date_of_birth }}">
+                                <input type="date" class="form-control" id="date_of_birth-{{ evacuee.id }}"
+                                    name="date_of_birth" value="{{ evacuee.date_of_birth }}">
                                 <div class="invalid-feedback">
                                     Please provide a valid date of birth.
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-6 mb-3">
                                 <label for="gender-{{ evacuee.id }}" class="form-label">Gender</label>
                                 <select class="form-select" id="gender-{{ evacuee.id }}" name="gender">
-                                    <option value="male" {% if evacuee.gender == 'male' %}selected{% endif %}>Male</option>
-                                    <option value="female" {% if evacuee.gender == 'female' %}selected{% endif %}>Female</option>
-                                    <option value="other" {% if evacuee.gender == 'other' %}selected{% endif %}>Other</option>
+                                    <option value="male" {% if evacuee.gender=='male' %}selected{% endif %}>Male
+                                    </option>
+                                    <option value="female" {% if evacuee.gender=='female' %}selected{% endif %}>Female
+                                    </option>
+                                    <option value="other" {% if evacuee.gender=='other' %}selected{% endif %}>Other
+                                    </option>
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label for="evacuation_center_id-{{ evacuee.id }}" class="form-label">Evacuation Center</label>
-                            <select class="form-select" id="evacuation_center_id-{{ evacuee.id }}" name="evacuation_center_id" required>
+                            <label for="evacuation_center_id-{{ evacuee.id }}" class="form-label">Evacuation
+                                Center</label>
+                            <select class="form-select" id="evacuation_center_id-{{ evacuee.id }}"
+                                name="evacuation_center_id" required>
                                 {% for center in centers if centers is defined %}
-                                    <option value="{{ center.id }}" {% if evacuee.evacuation_center_id == center.id %}selected{% endif %}>
-                                        {{ center.name }}
-                                    </option>
+                                <option value="{{ center.id }}" {% if evacuee.evacuation_center_id==center.id
+                                    %}selected{% endif %}>
+                                    {{ center.name }}
+                                </option>
                                 {% endfor %}
                             </select>
                             <div class="invalid-feedback">
                                 Please select an evacuation center.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="family_id-{{ evacuee.id }}" class="form-label">Family</label>
                             <select class="form-select" id="family_id-{{ evacuee.id }}" name="family_id">
                                 <option value="0">None</option>
                                 {% for family in families if families is defined %}
-                                    <option value="{{ family.id }}" {% if evacuee.family_id == family.id %}selected{% endif %}>
-                                        {{ family.family_name }}
-                                    </option>
+                                <option value="{{ family.id }}" {% if evacuee.family_id==family.id %}selected{% endif
+                                    %}>
+                                    {{ family.family_name }}
+                                </option>
                                 {% endfor %}
                             </select>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="status-{{ evacuee.id }}" class="form-label">Status</label>
                             <select class="form-select" id="status-{{ evacuee.id }}" name="status">
-                                <option value="present" {% if evacuee.status == 'present' %}selected{% endif %}>Present</option>
-                                <option value="relocated" {% if evacuee.status == 'relocated' %}selected{% endif %}>Relocated</option>
-                                <option value="missing" {% if evacuee.status == 'missing' %}selected{% endif %}>Missing</option>
-                                <option value="deceased" {% if evacuee.status == 'deceased' %}selected{% endif %}>Deceased</option>
+                                <option value="present" {% if evacuee.status=='present' %}selected{% endif %}>Present
+                                </option>
+                                <option value="relocated" {% if evacuee.status=='relocated' %}selected{% endif %}>
+                                    Relocated</option>
+                                <option value="missing" {% if evacuee.status=='missing' %}selected{% endif %}>Missing
+                                </option>
+                                <option value="deceased" {% if evacuee.status=='deceased' %}selected{% endif %}>Deceased
+                                </option>
                             </select>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="special_needs-{{ evacuee.id }}" class="form-label">Special Needs</label>
-                            <textarea class="form-control" id="special_needs-{{ evacuee.id }}" name="special_needs" rows="3">{{ evacuee.special_needs }}</textarea>
+                            <textarea class="form-control" id="special_needs-{{ evacuee.id }}" name="special_needs"
+                                rows="3">{{ evacuee.special_needs }}</textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -467,9 +510,10 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Delete Evacuee Modal -->
-    <div class="modal fade" id="deleteEvacueeModal-{{ evacuee.id }}" tabindex="-1" aria-labelledby="deleteEvacueeModalLabel-{{ evacuee.id }}" aria-hidden="true">
+    <div class="modal fade" id="deleteEvacueeModal-{{ evacuee.id }}" tabindex="-1"
+        aria-labelledby="deleteEvacueeModalLabel-{{ evacuee.id }}" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -478,14 +522,14 @@
                 </div>
                 <div class="modal-body">
                     <p>Are you sure you want to delete the evacuee <strong>{{ evacuee.full_name }}</strong>?</p>
-                    
+
                     {% set is_head_of_family = false %}
                     {% for family in families if families is defined %}
-                        {% if family.head_of_family_id == evacuee.id %}
-                            {% set is_head_of_family = true %}
-                        {% endif %}
+                    {% if family.head_of_family_id == evacuee.id %}
+                    {% set is_head_of_family = true %}
+                    {% endif %}
                     {% endfor %}
-                    
+
                     {% if is_head_of_family %}
                     <div class="alert alert-danger">
                         <i class="fas fa-exclamation-triangle me-2"></i>
@@ -505,7 +549,7 @@
         </div>
     </div>
     {% endfor %}
-    
+
     {% endif %}
 </div>
 {% endblock %}

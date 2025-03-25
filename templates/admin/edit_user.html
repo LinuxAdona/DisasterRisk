@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit User - Disaster Risk Information Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Edit User</h1>
+        <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Users
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">User Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p><strong>Username:</strong> {{ user.username }}</p>
+                    <p><strong>Full Name:</strong> {{ user.full_name }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Phone:</strong> {{ user.phone or 'Not provided' }}</p>
+                    <p><strong>Created:</strong> {{ user.created_at.strftime('%Y-%m-%d') }}</p>
+                    <p>
+                        <strong>Status:</strong>
+                        <span class="badge {% if user.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            <form action="{{ url_for('admin.edit_user', user_id=user.id) }}" method="POST">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    <label for="role" class="form-label">Role</label>
+                    {{ form.role(class="form-select", id="role") }}
+                    <small class="form-text text-muted">
+                        {% if user.role == 'admin' %}
+                        <span class="text-danger">Warning: If this is the last admin user, the role cannot be
+                            changed.</span>
+                        {% endif %}
+                    </small>
+                </div>
+
+                <div class="mb-3 form-check">
+                    {{ form.is_active(class="form-check-input", id="is_active") }}
+                    <label class="form-check-label" for="is_active">Active Account</label>
+                    <small class="form-text text-muted d-block">
+                        {% if user.role == 'admin' %}
+                        <span class="text-danger">Warning: If this is the last active admin, the account cannot be
+                            deactivated.</span>
+                        {% endif %}
+                    </small>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-secondary me-2">Cancel</a>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

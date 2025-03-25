@@ -1,101 +1,50 @@
 {% extends 'base.html' %}
 
-{% block title %}User Management - Admin Dashboard{% endblock %}
+{% block title %}User Management - Disaster Risk Information Management System{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">User Management</h1>
-    
-    <!-- Search and Filter -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>User Management</h1>
+    </div>
+
+    <!-- Search Box -->
     <div class="card mb-4">
         <div class="card-body">
-            <form action="{{ url_for('admin.users') }}" method="GET" class="row g-3">
-                <div class="col-md-4">
+            <form method="GET" action="{{ url_for('admin.users') }}" class="row g-3">
+                <div class="col-md-8">
                     <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search users..." name="query" value="{{ request.args.get('query', '') }}">
-                        <button class="btn btn-outline-secondary" type="submit">
-                            <i class="fas fa-search"></i>
+                        {{ search_form.query(class="form-control", placeholder="Search by username, email, or name") }}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
                         </button>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <select class="form-select" name="role">
-                        <option value="">All Roles</option>
-                        <option value="admin" {% if request.args.get('role') == 'admin' %}selected{% endif %}>Admin</option>
-                        <option value="volunteer" {% if request.args.get('role') == 'volunteer' %}selected{% endif %}>Volunteer</option>
-                        <option value="donor" {% if request.args.get('role') == 'donor' %}selected{% endif %}>Donor</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" name="status">
-                        <option value="">All Statuses</option>
-                        <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Active</option>
-                        <option value="inactive" {% if request.args.get('status') == 'inactive' %}selected{% endif %}>Inactive</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                <div class="col-md-4 text-md-end">
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-undo"></i> Reset
+                    </a>
                 </div>
             </form>
         </div>
     </div>
-    
-    <!-- Pending Approvals Card -->
-    {% set pending_users = users|selectattr('is_active', 'equalto', false)|list %}
-    {% if pending_users %}
-    <div class="card mb-4 dashboard-card warning">
-        <div class="card-header bg-warning text-dark">
-            <h5 class="mb-0"><i class="fas fa-user-clock me-2"></i>Pending User Approvals</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Registration Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for user in pending_users %}
-                        <tr>
-                            <td>{{ user.full_name }}</td>
-                            <td>{{ user.email }}</td>
-                            <td><span class="role-badge role-{{ user.role }}">{{ user.role }}</span></td>
-                            <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
-                            <td>
-                                <form action="{{ url_for('admin.activate_user', user_id=user.id) }}" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-success btn-sm">
-                                        <i class="fas fa-check me-1"></i>Approve
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    
-    <!-- Users Table -->
+
     <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Users List</h5>
+        </div>
         <div class="card-body">
+            {% if users %}
             <div class="table-responsive">
-                <table class="table table-hover datatable">
+                <table class="table table-hover table-striped">
                     <thead>
                         <tr>
                             <th>Username</th>
-                            <th>Name</th>
+                            <th>Full Name</th>
                             <th>Email</th>
-                            <th>Phone</th>
                             <th>Role</th>
                             <th>Status</th>
-                            <th>Joined Date</th>
+                            <th>Created</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -105,91 +54,87 @@
                             <td>{{ user.username }}</td>
                             <td>{{ user.full_name }}</td>
                             <td>{{ user.email }}</td>
-                            <td>{{ user.phone if user.phone else 'N/A' }}</td>
-                            <td><span class="role-badge role-{{ user.role }}">{{ user.role }}</span></td>
                             <td>
-                                {% if user.is_active %}
-                                <span class="badge bg-success">Active</span>
-                                {% else %}
-                                <span class="badge bg-secondary">Inactive</span>
-                                {% endif %}
+                                <span class="badge 
+                                            {% if user.role == 'admin' %}bg-danger
+                                            {% elif user.role == 'volunteer' %}bg-primary
+                                            {% else %}bg-success{% endif %}">
+                                    {{ user.role|capitalize }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if user.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
                             </td>
                             <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
                             <td>
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editUserModal-{{ user.id }}">
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('admin.edit_user', user_id=user.id) }}"
+                                        class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-edit"></i>
-                                    </button>
+                                    </a>
                                     {% if user.is_active %}
-                                        <form action="{{ url_for('admin.deactivate_user', user_id=user.id) }}" method="POST" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-outline-warning" {% if user.id == current_user.id %}disabled title="Cannot deactivate yourself"{% endif %}>
-                                                <i class="fas fa-user-slash"></i>
-                                            </button>
-                                        </form>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deactivateUserModal-{{ user.id }}">
+                                        <i class="fas fa-user-slash"></i>
+                                    </button>
                                     {% else %}
-                                        <form action="{{ url_for('admin.activate_user', user_id=user.id) }}" method="POST" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-outline-success">
-                                                <i class="fas fa-user-check"></i>
-                                            </button>
-                                        </form>
+                                    <form action="{{ url_for('admin.activate_user', user_id=user.id) }}" method="POST"
+                                        class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-user-check"></i>
+                                        </button>
+                                    </form>
                                     {% endif %}
                                 </div>
+
+                                <!-- Deactivate User Modal -->
+                                <div class="modal fade" id="deactivateUserModal-{{ user.id }}" tabindex="-1"
+                                    aria-labelledby="deactivateUserModalLabel-{{ user.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deactivateUserModalLabel-{{ user.id }}">
+                                                    Confirm Deactivation</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to deactivate user: <strong>{{ user.username
+                                                        }}</strong>?</p>
+                                                <p>Deactivated users will no longer be able to log in to the system.</p>
+                                                {% if user.role == 'admin' %}
+                                                <div class="alert alert-warning">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i> This is an admin
+                                                    user. Make sure there is at least one other active admin.
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('admin.deactivate_user', user_id=user.id) }}"
+                                                    method="POST">
+                                                    <button type="submit" class="btn btn-danger">Deactivate
+                                                        User</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="8" class="text-center">No users found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-    
-    <!-- Edit User Modals -->
-    {% for user in users %}
-    <div class="modal fade" id="editUserModal-{{ user.id }}" tabindex="-1" aria-labelledby="editUserModalLabel-{{ user.id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editUserModalLabel-{{ user.id }}">Edit User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="{{ url_for('admin.edit_user', user_id=user.id) }}" method="POST" class="needs-validation" novalidate>
-                    <div class="modal-body">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="mb-3">
-                            <p><strong>User:</strong> {{ user.full_name }} ({{ user.username }})</p>
-                            <p><strong>Email:</strong> {{ user.email }}</p>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="role-{{ user.id }}" class="form-label">Role</label>
-                            <select class="form-select" id="role-{{ user.id }}" name="role">
-                                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-                                <option value="volunteer" {% if user.role == 'volunteer' %}selected{% endif %}>Volunteer</option>
-                                <option value="donor" {% if user.role == 'donor' %}selected{% endif %}>Donor</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="is_active-{{ user.id }}" name="is_active" {% if user.is_active %}checked{% endif %} {% if user.id == current_user.id %}disabled{% endif %}>
-                            <label class="form-check-label" for="is_active-{{ user.id }}">Active</label>
-                            {% if user.id == current_user.id %}
-                            <div class="form-text">You cannot deactivate your own account.</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-1"></i> No users found.
             </div>
+            {% endif %}
         </div>
     </div>
-    {% endfor %}
 </div>
 {% endblock %}

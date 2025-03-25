@@ -1,68 +1,77 @@
 {% extends 'base.html' %}
 
-{% block title %}Evacuee Management - Volunteer Dashboard{% endblock %}
+{% block title %}Evacuees - Disaster Risk Information Management System{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Evacuee Management</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEvacueeModal">
-            <i class="fas fa-plus me-1"></i> Register Evacuee
+        <h1>Evacuees</h1>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEvacueeModal">
+            <i class="fas fa-plus me-1"></i> Add New Evacuee
         </button>
     </div>
-    
-    <!-- Search and Filter -->
+
     <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Search Evacuees</h5>
+        </div>
         <div class="card-body">
-            <form action="{{ url_for('volunteer.evacuees') }}" method="GET" class="row g-3">
-                <div class="col-md-4">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search evacuees..." name="query" value="{{ request.args.get('query', '') }}">
-                        <button class="btn btn-outline-secondary" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="col-md-3">
-                    <select class="form-select" name="status">
-                        <option value="">All Statuses</option>
-                        <option value="present" {% if request.args.get('status') == 'present' %}selected{% endif %}>Present</option>
-                        <option value="relocated" {% if request.args.get('status') == 'relocated' %}selected{% endif %}>Relocated</option>
-                        <option value="missing" {% if request.args.get('status') == 'missing' %}selected{% endif %}>Missing</option>
-                        <option value="deceased" {% if request.args.get('status') == 'deceased' %}selected{% endif %}>Deceased</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-3">
-                    <select class="form-select" name="center">
-                        <option value="">All Centers</option>
-                        {% for center in centers if centers is defined %}
-                            <option value="{{ center.id }}" {% if request.args.get('center')|int == center.id %}selected{% endif %}>{{ center.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Filter</button>
-                </div>
+            <form action="{{ url_for('volunteer.evacuees') }}" method="GET" class="d-flex">
+                <input type="text" name="query" class="form-control me-2"
+                    placeholder="Search by name, status, or special needs..."
+                    value="{{ request.args.get('query', '') }}">
+                <button type="submit" class="btn btn-outline-primary">Search</button>
             </form>
         </div>
     </div>
-    
-    <!-- Evacuees Table -->
+
     <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Evacuee List</h5>
+            <div>
+                <div class="btn-group me-2">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                        id="centerFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        Filter by Center
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="centerFilterDropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('volunteer.evacuees') }}">All Centers</a></li>
+                        {% for center in centers %}
+                        <li><a class="dropdown-item" href="{{ url_for('volunteer.evacuees', center_id=center.id) }}">{{
+                                center.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                        id="statusFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        Filter by Status
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="statusFilterDropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('volunteer.evacuees') }}">All Statuses</a></li>
+                        <li><a class="dropdown-item"
+                                href="{{ url_for('volunteer.evacuees', status='present') }}">Present</a></li>
+                        <li><a class="dropdown-item"
+                                href="{{ url_for('volunteer.evacuees', status='relocated') }}">Relocated</a></li>
+                        <li><a class="dropdown-item"
+                                href="{{ url_for('volunteer.evacuees', status='missing') }}">Missing</a></li>
+                        <li><a class="dropdown-item"
+                                href="{{ url_for('volunteer.evacuees', status='deceased') }}">Deceased</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
         <div class="card-body">
+            {% if evacuees %}
             <div class="table-responsive">
-                <table class="table table-hover datatable">
+                <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Age</th>
-                            <th>Gender</th>
-                            <th>Family</th>
-                            <th>Evacuation Center</th>
+                            <th>Age/Gender</th>
                             <th>Status</th>
+                            <th>Family</th>
+                            <th>Center</th>
                             <th>Special Needs</th>
                             <th>Actions</th>
                         </tr>
@@ -71,214 +80,370 @@
                         {% for evacuee in evacuees %}
                         <tr>
                             <td>{{ evacuee.full_name }}</td>
-                            <td>{{ evacuee.age if evacuee.age else 'N/A' }}</td>
-                            <td>{{ evacuee.gender|capitalize if evacuee.gender else 'N/A' }}</td>
-                            <td>{{ evacuee.family.family_name if evacuee.family else 'N/A' }}</td>
-                            <td>{{ evacuee.evacuation_center.name if evacuee.evacuation_center else 'Not assigned' }}</td>
                             <td>
-                                <form action="{{ url_for('volunteer.update_evacuee_status', evacuee_id=evacuee.id) }}" method="POST" class="status-update-form">
-                                    <select class="form-select form-select-sm" name="status" data-original-value="{{ evacuee.status }}">
-                                        <option value="present" {% if evacuee.status == 'present' %}selected{% endif %}>Present</option>
-                                        <option value="relocated" {% if evacuee.status == 'relocated' %}selected{% endif %}>Relocated</option>
-                                        <option value="missing" {% if evacuee.status == 'missing' %}selected{% endif %}>Missing</option>
-                                        <option value="deceased" {% if evacuee.status == 'deceased' %}selected{% endif %}>Deceased</option>
-                                    </select>
-                                </form>
+                                {% if evacuee.age %}{{ evacuee.age }} years{% else %}Unknown{% endif %} /
+                                {{ evacuee.gender|capitalize if evacuee.gender else 'Unknown' }}
                             </td>
-                            <td>{{ evacuee.special_needs if evacuee.special_needs else 'None' }}</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editEvacueeModal-{{ evacuee.id }}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
+                                <span class="badge 
+                                        {% if evacuee.status == 'present' %}bg-success
+                                        {% elif evacuee.status == 'relocated' %}bg-info
+                                        {% elif evacuee.status == 'missing' %}bg-warning
+                                        {% else %}bg-secondary{% endif %}">
+                                    {{ evacuee.status|capitalize }}
+                                </span>
                             </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="8" class="text-center">No evacuees found.</td>
+                            <td>
+                                {% if evacuee.family %}
+                                {{ evacuee.family.family_name }}
+                                {% if evacuee.family.head_of_family_id == evacuee.id %}
+                                <span class="badge bg-primary">Head</span>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">None</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ evacuee.evacuation_center.name if evacuee.evacuation_center else 'N/A' }}</td>
+                            <td>
+                                {% if evacuee.special_needs %}
+                                <span class="badge bg-info" data-bs-toggle="tooltip"
+                                    title="{{ evacuee.special_needs }}">
+                                    <i class="fas fa-info-circle"></i> Yes
+                                </span>
+                                {% else %}
+                                <span class="text-muted">None</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                        data-bs-target="#editEvacueeModal-{{ evacuee.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        data-bs-toggle="modal" data-bs-target="#statusUpdateModal{{ evacuee.id }}">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Edit Evacuee Modal -->
+                                <div class="modal fade" id="editEvacueeModal-{{ evacuee.id }}" tabindex="-1"
+                                    aria-labelledby="editEvacueeModalLabel-{{ evacuee.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="editEvacueeModalLabel-{{ evacuee.id }}">Edit
+                                                    Evacuee</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <form
+                                                action="{{ url_for('volunteer.edit_evacuee', evacuee_id=evacuee.id) }}"
+                                                method="POST" class="needs-validation" novalidate>
+                                                <div class="modal-body">
+                                                    {{ form.hidden_tag() }}
+
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="first_name-{{ evacuee.id }}"
+                                                                class="form-label">First Name</label>
+                                                            <input type="text" class="form-control"
+                                                                id="first_name-{{ evacuee.id }}" name="first_name"
+                                                                value="{{ evacuee.first_name }}" required>
+                                                            <div class="invalid-feedback">
+                                                                Please provide a first name.
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="last_name-{{ evacuee.id }}"
+                                                                class="form-label">Last Name</label>
+                                                            <input type="text" class="form-control"
+                                                                id="last_name-{{ evacuee.id }}" name="last_name"
+                                                                value="{{ evacuee.last_name }}" required>
+                                                            <div class="invalid-feedback">
+                                                                Please provide a last name.
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="date_of_birth-{{ evacuee.id }}"
+                                                                class="form-label">Date of Birth</label>
+                                                            <input type="date" class="form-control"
+                                                                id="date_of_birth-{{ evacuee.id }}" name="date_of_birth"
+                                                                value="{{ evacuee.date_of_birth }}">
+                                                            <div class="invalid-feedback">
+                                                                Please provide a valid date of birth.
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="gender-{{ evacuee.id }}"
+                                                                class="form-label">Gender</label>
+                                                            <select class="form-select" id="gender-{{ evacuee.id }}"
+                                                                name="gender">
+                                                                <option value="male" {% if evacuee.gender=='male'
+                                                                    %}selected{% endif %}>Male</option>
+                                                                <option value="female" {% if evacuee.gender=='female'
+                                                                    %}selected{% endif %}>Female</option>
+                                                                <option value="other" {% if evacuee.gender=='other'
+                                                                    %}selected{% endif %}>Other</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="evacuation_center_id-{{ evacuee.id }}"
+                                                            class="form-label">Evacuation Center</label>
+                                                        <select class="form-select"
+                                                            id="evacuation_center_id-{{ evacuee.id }}"
+                                                            name="evacuation_center_id" required>
+                                                            {% for center in centers if centers is defined %}
+                                                            <option value="{{ center.id }}" {% if
+                                                                evacuee.evacuation_center_id==center.id %}selected{%
+                                                                endif %}>
+                                                                {{ center.name }}
+                                                            </option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <div class="invalid-feedback">
+                                                            Please select an evacuation center.
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="family_id-{{ evacuee.id }}"
+                                                            class="form-label">Family</label>
+                                                        <select class="form-select" id="family_id-{{ evacuee.id }}"
+                                                            name="family_id">
+                                                            <option value="0">None</option>
+                                                            {% for family in families if families is defined %}
+                                                            <option value="{{ family.id }}" {% if
+                                                                evacuee.family_id==family.id %}selected{% endif %}>
+                                                                {{ family.family_name }}
+                                                            </option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="status-{{ evacuee.id }}"
+                                                            class="form-label">Status</label>
+                                                        <select class="form-select" id="status-{{ evacuee.id }}"
+                                                            name="status">
+                                                            <option value="present" {% if evacuee.status=='present'
+                                                                %}selected{% endif %}>Present</option>
+                                                            <option value="relocated" {% if evacuee.status=='relocated'
+                                                                %}selected{% endif %}>Relocated</option>
+                                                            <option value="missing" {% if evacuee.status=='missing'
+                                                                %}selected{% endif %}>Missing</option>
+                                                            <option value="deceased" {% if evacuee.status=='deceased'
+                                                                %}selected{% endif %}>Deceased</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="special_needs-{{ evacuee.id }}"
+                                                            class="form-label">Special Needs</label>
+                                                        <textarea class="form-control"
+                                                            id="special_needs-{{ evacuee.id }}" name="special_needs"
+                                                            rows="3">{{ evacuee.special_needs }}</textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Status Update Modal -->
+                                <div class="modal fade" id="statusUpdateModal{{ evacuee.id }}" tabindex="-1"
+                                    aria-labelledby="statusUpdateModalLabel{{ evacuee.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="statusUpdateModalLabel{{ evacuee.id }}">
+                                                    Update Status: {{ evacuee.full_name }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <form
+                                                action="{{ url_for('volunteer.update_evacuee_status', evacuee_id=evacuee.id) }}"
+                                                method="POST">
+                                                <input type="hidden" name="csrf_token"
+                                                    value="{{ csrf_token() if csrf_token else '' }}">
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label for="status{{ evacuee.id }}"
+                                                            class="form-label">Status</label>
+                                                        <select class="form-select" id="status{{ evacuee.id }}"
+                                                            name="status" required>
+                                                            <option value="present" {% if evacuee.status=='present'
+                                                                %}selected{% endif %}>Present</option>
+                                                            <option value="relocated" {% if evacuee.status=='relocated'
+                                                                %}selected{% endif %}>Relocated</option>
+                                                            <option value="missing" {% if evacuee.status=='missing'
+                                                                %}selected{% endif %}>Missing</option>
+                                                            <option value="deceased" {% if evacuee.status=='deceased'
+                                                                %}selected{% endif %}>Deceased</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary">Update Status</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% else %}
+            <div class="alert alert-info">No evacuees found matching your criteria.</div>
+            {% endif %}
         </div>
     </div>
-    
+
     <!-- Add Evacuee Modal -->
-    <div class="modal fade" id="addEvacueeModal" tabindex="-1" aria-labelledby="addEvacueeModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+    <div class="modal fade" id="addEvacueeModal" tabindex="-1" aria-labelledby="addEvacueeModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addEvacueeModalLabel">Register Evacuee</h5>
+                    <h5 class="modal-title" id="addEvacueeModalLabel">Add New Evacuee</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="{{ url_for('volunteer.add_evacuee') }}" method="POST" class="needs-validation" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
                     <div class="modal-body">
-                        {{ form.hidden_tag() }}
-                        
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="first_name" class="form-label">First Name</label>
-                                {{ form.first_name(class="form-control", id="first_name", placeholder="Enter first name") }}
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
                                 <div class="invalid-feedback">
                                     Please provide a first name.
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-6 mb-3">
                                 <label for="last_name" class="form-label">Last Name</label>
-                                {{ form.last_name(class="form-control", id="last_name", placeholder="Enter last name") }}
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
                                 <div class="invalid-feedback">
                                     Please provide a last name.
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="date_of_birth" class="form-label">Date of Birth</label>
-                                {{ form.date_of_birth(class="form-control", id="date_of_birth", type="date") }}
-                                <div class="invalid-feedback">
-                                    Please provide a valid date of birth.
-                                </div>
+                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth">
                             </div>
-                            
+
                             <div class="col-md-6 mb-3">
                                 <label for="gender" class="form-label">Gender</label>
-                                {{ form.gender(class="form-select", id="gender") }}
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="evacuation_center_id" class="form-label">Evacuation Center</label>
-                            {{ form.evacuation_center_id(class="form-select", id="evacuation_center_id") }}
-                            <div class="invalid-feedback">
-                                Please select an evacuation center.
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="family_id" class="form-label">Family</label>
-                            {{ form.family_id(class="form-select", id="family_id") }}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="status" class="form-label">Status</label>
-                            {{ form.status(class="form-select", id="status") }}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="special_needs" class="form-label">Special Needs</label>
-                            {{ form.special_needs(class="form-control", id="special_needs", placeholder="Enter any special needs or medical conditions") }}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        {{ form.submit(class="btn btn-primary") }}
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Edit Evacuee Modals -->
-    {% for evacuee in evacuees %}
-    <div class="modal fade" id="editEvacueeModal-{{ evacuee.id }}" tabindex="-1" aria-labelledby="editEvacueeModalLabel-{{ evacuee.id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editEvacueeModalLabel-{{ evacuee.id }}">Edit Evacuee</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="{{ url_for('volunteer.edit_evacuee', evacuee_id=evacuee.id) }}" method="POST" class="needs-validation" novalidate>
-                    <div class="modal-body">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="first_name-{{ evacuee.id }}" class="form-label">First Name</label>
-                                <input type="text" class="form-control" id="first_name-{{ evacuee.id }}" name="first_name" value="{{ evacuee.first_name }}" required>
-                                <div class="invalid-feedback">
-                                    Please provide a first name.
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label for="last_name-{{ evacuee.id }}" class="form-label">Last Name</label>
-                                <input type="text" class="form-control" id="last_name-{{ evacuee.id }}" name="last_name" value="{{ evacuee.last_name }}" required>
-                                <div class="invalid-feedback">
-                                    Please provide a last name.
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="date_of_birth-{{ evacuee.id }}" class="form-label">Date of Birth</label>
-                                <input type="date" class="form-control" id="date_of_birth-{{ evacuee.id }}" name="date_of_birth" value="{{ evacuee.date_of_birth }}">
-                                <div class="invalid-feedback">
-                                    Please provide a valid date of birth.
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label for="gender-{{ evacuee.id }}" class="form-label">Gender</label>
-                                <select class="form-select" id="gender-{{ evacuee.id }}" name="gender">
-                                    <option value="male" {% if evacuee.gender == 'male' %}selected{% endif %}>Male</option>
-                                    <option value="female" {% if evacuee.gender == 'female' %}selected{% endif %}>Female</option>
-                                    <option value="other" {% if evacuee.gender == 'other' %}selected{% endif %}>Other</option>
+                                <select class="form-select" id="gender" name="gender">
+                                    <option value="">- Select -</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
                                 </select>
                             </div>
                         </div>
-                        
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="present">Present</option>
+                                    <option value="relocated">Relocated</option>
+                                    <option value="missing">Missing</option>
+                                    <option value="deceased">Deceased</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a status.
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="family_id" class="form-label">Family</label>
+                                <select class="form-select" id="family_id" name="family_id">
+                                    <option value="">No Family</option>
+                                    {% for family in families %}
+                                    <option value="{{ family.id }}">{{ family.family_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
-                            <label for="evacuation_center_id-{{ evacuee.id }}" class="form-label">Evacuation Center</label>
-                            <select class="form-select" id="evacuation_center_id-{{ evacuee.id }}" name="evacuation_center_id" required>
-                                {% for center in centers if centers is defined %}
-                                    <option value="{{ center.id }}" {% if evacuee.evacuation_center_id == center.id %}selected{% endif %}>
-                                        {{ center.name }}
-                                    </option>
+                            <label for="evacuation_center_id" class="form-label">Evacuation Center</label>
+                            <select class="form-select" id="evacuation_center_id" name="evacuation_center_id" required>
+                                {% for center in centers %}
+                                <option value="{{ center.id }}">{{ center.name }}</option>
                                 {% endfor %}
                             </select>
                             <div class="invalid-feedback">
                                 Please select an evacuation center.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label for="family_id-{{ evacuee.id }}" class="form-label">Family</label>
-                            <select class="form-select" id="family_id-{{ evacuee.id }}" name="family_id">
-                                <option value="0">None</option>
-                                {% for family in families if families is defined %}
-                                    <option value="{{ family.id }}" {% if evacuee.family_id == family.id %}selected{% endif %}>
-                                        {{ family.family_name }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="status-{{ evacuee.id }}" class="form-label">Status</label>
-                            <select class="form-select" id="status-{{ evacuee.id }}" name="status">
-                                <option value="present" {% if evacuee.status == 'present' %}selected{% endif %}>Present</option>
-                                <option value="relocated" {% if evacuee.status == 'relocated' %}selected{% endif %}>Relocated</option>
-                                <option value="missing" {% if evacuee.status == 'missing' %}selected{% endif %}>Missing</option>
-                                <option value="deceased" {% if evacuee.status == 'deceased' %}selected{% endif %}>Deceased</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="special_needs-{{ evacuee.id }}" class="form-label">Special Needs</label>
-                            <textarea class="form-control" id="special_needs-{{ evacuee.id }}" name="special_needs" rows="3">{{ evacuee.special_needs }}</textarea>
+                            <label for="special_needs" class="form-label">Special Needs</label>
+                            <textarea class="form-control" id="special_needs" name="special_needs" rows="3"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="submit" class="btn btn-primary">Add Evacuee</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    {% endfor %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Form validation
+    (function () {
+        'use strict';
+
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.querySelectorAll('.needs-validation');
+
+        // Loop over them and prevent submission
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+
+                    form.classList.add('was-validated');
+                }, false);
+            });
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    })();
+</script>
 {% endblock %}

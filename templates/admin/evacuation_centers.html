@@ -49,14 +49,13 @@
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="progress flex-grow-1 me-2">
-                                    <div class="progress-bar {% if center.occupancy_percentage > 80 %}bg-danger{% elif center.occupancy_percentage > 50 %}bg-warning{% else %}bg-success{% endif %}" 
-                                        role="progressbar" 
-                                        style="width: {{ center.occupancy_percentage }}%;" 
-                                        aria-valuenow="{{ center.occupancy_percentage }}" 
-                                        aria-valuemin="0" 
+                                    <div class="progress-bar {% if center.occupancy_percentage > 80 %}bg-danger{% elif center.occupancy_percentage > 50 %}bg-warning{% else %}bg-success{% endif %}"
+                                        role="progressbar" style="width: {{ center.occupancy_percentage }}%;"
+                                        aria-valuenow="{{ center.occupancy_percentage }}" aria-valuemin="0"
                                         aria-valuemax="100"></div>
                                 </div>
-                                <span>{{ center.current_occupancy }}/{{ center.capacity }} ({{ center.occupancy_percentage }}%)</span>
+                                <span>{{ center.current_occupancy }}/{{ center.capacity }} ({{
+                                    center.occupancy_percentage }}%)</span>
                             </div>
                         </td>
                         <td>
@@ -66,15 +65,17 @@
                         </td>
                         <td>
                             <div class="btn-group">
-                                <a href="{{ url_for('admin.edit_evacuation_center', center_id=center.id) }}" class="btn btn-sm btn-outline-primary">
+                                <a href="{{ url_for('admin.edit_evacuation_center', center_id=center.id) }}"
+                                    class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
-                                <button class="btn btn-sm {% if center.active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" 
-                                        onclick="toggleCenterStatus('{{ center.id }}', {{ 'false' if center.active else 'true' }})">
+                                <button
+                                    class="btn btn-sm {% if center.active %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
+                                    onclick="toggleCenterStatus('{{ center.id }}', {{ 'false' if center.active else 'true' }})">
                                     {% if center.active %}
-                                        <i class="fas fa-times-circle"></i> Deactivate
+                                    <i class="fas fa-times-circle"></i> Deactivate
                                     {% else %}
-                                        <i class="fas fa-check-circle"></i> Activate
+                                    <i class="fas fa-check-circle"></i> Activate
                                     {% endif %}
                                 </button>
                             </div>
@@ -98,63 +99,67 @@
             <div class="modal-body">
                 <form method="POST" action="{{ url_for('admin.add_evacuation_center') }}">
                     {{ form.hidden_tag() }}
-                    
+
                     <div class="mb-3">
                         <label for="name" class="form-label">{{ form.name.label }}</label>
-                        {{ form.name(class="form-control", id="name", placeholder="Enter center name") }}
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter center name"
+                            required>
                         {% if form.name.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.name.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.name.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
                         {% endif %}
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="address" class="form-label">{{ form.address.label }}</label>
-                        {{ form.address(class="form-control", id="address", placeholder="Enter center address", rows=3) }}
+                        {{ form.address(class="form-control", id="address", placeholder="Enter center address", rows=3)
+                        }}
                         {% if form.address.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.address.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.address.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
                         {% endif %}
                     </div>
-                    
+
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="capacity" class="form-label">{{ form.capacity.label }}</label>
-                            {{ form.capacity(class="form-control", id="capacity", placeholder="Enter center capacity") }}
+                            {{ form.capacity(class="form-control", id="capacity", placeholder="Enter center capacity")
+                            }}
                             {% if form.capacity.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.capacity.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.capacity.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
                             {% endif %}
                         </div>
                         <div class="col-md-6">
                             <label for="contact" class="form-label">{{ form.contact.label }}</label>
-                            {{ form.contact(class="form-control", id="contact", placeholder="Enter contact information") }}
+                            {{ form.contact(class="form-control", id="contact", placeholder="Enter contact information")
+                            }}
                             {% if form.contact.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.contact.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.contact.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
                             {% endif %}
                         </div>
                     </div>
-                    
+
                     <div class="mb-3 form-check">
                         {{ form.active(class="form-check-input", id="active") }}
                         <label class="form-check-label" for="active">
                             {{ form.active.label }}
                         </label>
                     </div>
-                    
+
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save me-2"></i>Save Evacuation Center
@@ -175,63 +180,63 @@
     <div class="card-body">
         <form method="POST" action="{{ url_for('admin.edit_evacuation_center', center_id=center.id) }}">
             {{ form.hidden_tag() }}
-            
+
             <div class="mb-3">
                 <label for="name" class="form-label">{{ form.name.label }}</label>
-                {{ form.name(class="form-control", id="name", placeholder="Enter center name") }}
+                <input type="text" class="form-control" id="name" name="name" placeholder="Enter center name" required>
                 {% if form.name.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.name.errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
+                <div class="invalid-feedback d-block">
+                    {% for error in form.name.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
                 {% endif %}
             </div>
-            
+
             <div class="mb-3">
                 <label for="address" class="form-label">{{ form.address.label }}</label>
                 {{ form.address(class="form-control", id="address", placeholder="Enter center address", rows=3) }}
                 {% if form.address.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.address.errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
+                <div class="invalid-feedback d-block">
+                    {% for error in form.address.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
                 {% endif %}
             </div>
-            
+
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="capacity" class="form-label">{{ form.capacity.label }}</label>
                     {{ form.capacity(class="form-control", id="capacity", placeholder="Enter center capacity") }}
                     {% if form.capacity.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.capacity.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.capacity.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
                     {% endif %}
                 </div>
                 <div class="col-md-6">
                     <label for="contact" class="form-label">{{ form.contact.label }}</label>
                     {{ form.contact(class="form-control", id="contact", placeholder="Enter contact information") }}
                     {% if form.contact.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.contact.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.contact.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
                     {% endif %}
                 </div>
             </div>
-            
+
             <div class="mb-3 form-check">
                 {{ form.active(class="form-check-input", id="active") }}
                 <label class="form-check-label" for="active">
                     {{ form.active.label }}
                 </label>
             </div>
-            
+
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save me-2"></i>Update Evacuation Center
@@ -249,14 +254,14 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/datatables-config.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Initialize DataTable
         $('#centersTable').DataTable({
             responsive: true,
             order: [[5, 'desc'], [0, 'asc']]
         });
     });
-    
+
     function toggleCenterStatus(centerId, active) {
         // This would ideally be an AJAX request, but for simplicity in this MVP,
         // we'll simulate the update by redirecting to edit with a status parameter

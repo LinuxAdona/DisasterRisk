@@ -1,266 +1,202 @@
 {% extends "base.html" %}
 
-{% block title %}Families - Admin{% endblock %}
+{% block title %}Family Management - Disaster Risk Information Management System{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-6">
-        <h1>Families</h1>
-    </div>
-    <div class="col-md-6 text-end">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFamilyModal">
-            <i class="fas fa-plus-circle me-2"></i>Add Family
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Family Groups</h1>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFamilyModal">
+            <i class="fas fa-plus me-1"></i> Add New Family
         </button>
     </div>
-</div>
 
-{% if family %}
-<div class="alert alert-info">
-    <i class="fas fa-info-circle me-2"></i>
-    You are editing family: <strong>{{ family.name }}</strong>
-</div>
-{% endif %}
-
-<div class="card mb-4">
-    <div class="card-header bg-primary bg-opacity-25">
-        <h5 class="mb-0">Families</h5>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped" id="familiesTable">
-                <thead>
-                    <tr>
-                        <th>Family Name</th>
-                        <th>Head of Family</th>
-                        <th>Contact</th>
-                        <th>Members</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for family in families %}
-                    <tr>
-                        <td>{{ family.name }}</td>
-                        <td>{{ family.head_name }}</td>
-                        <td>{{ family.contact }}</td>
-                        <td>
-                            <span class="badge bg-info">{{ family.member_count }} members</span>
-                            <button class="btn btn-sm btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#familyMembers{{ family.id }}" aria-expanded="false">
-                                Show Members
-                            </button>
-                            <div class="collapse mt-2" id="familyMembers{{ family.id }}">
-                                <div class="card card-body bg-dark">
-                                    <ul class="list-group list-group-flush">
-                                        {% for member in family.members %}
-                                            <li class="list-group-item d-flex justify-content-between align-items-center bg-dark">
-                                                {{ member.name }}
-                                                <span class="badge {% if member.status == 'active' %}bg-success{% elif member.status == 'relocated' %}bg-info{% elif member.status == 'missing' %}bg-warning{% else %}bg-danger{% endif %}">
-                                                    {{ member.status.capitalize() }}
-                                                </span>
-                                            </li>
-                                        {% else %}
-                                            <li class="list-group-item bg-dark">No members found.</li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <a href="{{ url_for('admin.edit_family', family_id=family.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-edit"></i> Edit
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- Search Box -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.families') }}" class="row g-3">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        {{ search_form.query(class="form-control", placeholder="Search by family name") }}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <a href="{{ url_for('admin.families') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-undo"></i> Reset
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
-</div>
 
-<!-- Add Family Modal -->
-<div class="modal fade" id="addFamilyModal" tabindex="-1" aria-labelledby="addFamilyModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary bg-opacity-25">
-                <h5 class="modal-title" id="addFamilyModalLabel">Add Family</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Families List</h5>
+        </div>
+        <div class="card-body">
+            {% if families %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Family Name</th>
+                            <th>Head of Family</th>
+                            <th>Member Count</th>
+                            <th>Address</th>
+                            <th>Contact Number</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for family in families %}
+                        <tr>
+                            <td>{{ family.family_name }}</td>
+                            <td>
+                                {% if family.head_of_family %}
+                                {{ family.head_of_family.full_name }}
+                                {% else %}
+                                <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ family.member_count }}</td>
+                            <td>{{ family.address or 'N/A' }}</td>
+                            <td>{{ family.contact_number or 'N/A' }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('admin.edit_family', family_id=family.id) }}"
+                                        class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deleteFamilyModal-{{ family.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Delete Family Modal -->
+                                <div class="modal fade" id="deleteFamilyModal-{{ family.id }}" tabindex="-1"
+                                    aria-labelledby="deleteFamilyModalLabel-{{ family.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteFamilyModalLabel-{{ family.id }}">
+                                                    Confirm Deletion</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to delete the family: <strong>{{
+                                                        family.family_name }}</strong>?</p>
+                                                <p class="text-danger">This action cannot be undone!</p>
+                                                {% if family.member_count > 0 %}
+                                                <div class="alert alert-warning">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i> This family has {{
+                                                    family.member_count }} members. You must remove all members before
+                                                    deleting.
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('admin.delete_family', family_id=family.id) }}"
+                                                    method="POST">
+                                                    <button type="submit" class="btn btn-danger" {% if
+                                                        family.member_count> 0 %}disabled{% endif %}>
+                                                        Delete Family
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <div class="modal-body">
-                <form method="POST" action="{{ url_for('admin.add_family') }}">
-                    {{ form.hidden_tag() }}
-                    
-                    <div class="mb-3">
-                        <label for="name" class="form-label">{{ form.name.label }}</label>
-                        {{ form.name(class="form-control", id="name", placeholder="Enter family name") }}
-                        {% if form.name.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.name.errors %}
-                                    {{ error }}
-                                {% endfor %}
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-1"></i> No families found. Create a new one to get started.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Add Family Modal -->
+    <div class="modal fade" id="addFamilyModal" tabindex="-1" aria-labelledby="addFamilyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addFamilyModalLabel">Add New Family</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('admin.add_family') }}" method="POST" class="needs-validation" novalidate>
+                    <div class="modal-body">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label for="family_name" class="form-label">Family Name</label>
+                            {{ form.family_name(class="form-control", id="family_name", placeholder="Enter family name")
+                            }}
+                            <div class="invalid-feedback">
+                                Please provide a family name.
                             </div>
-                        {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="head_of_family_id" class="form-label">Head of Family</label>
+                            {{ form.head_of_family_id(class="form-select", id="head_of_family_id") }}
+                            <small class="form-text text-muted">Can be assigned later.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Home Address</label>
+                            {{ form.address(class="form-control", id="address", placeholder="Enter address") }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contact_number" class="form-label">Contact Number</label>
+                            {{ form.contact_number(class="form-control", id="contact_number", placeholder="Enter contact
+                            number") }}
+                        </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="head_name" class="form-label">{{ form.head_name.label }}</label>
-                        {{ form.head_name(class="form-control", id="head_name", placeholder="Enter head of family name") }}
-                        {% if form.head_name.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.head_name.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="contact" class="form-label">{{ form.contact.label }}</label>
-                        {{ form.contact(class="form-control", id="contact", placeholder="Enter contact information") }}
-                        {% if form.contact.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.contact.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Save Family
-                        </button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        {{ form.submit(class="btn btn-primary") }}
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Edit Family Form (if editing) -->
-{% if family %}
-<div class="card mb-4">
-    <div class="card-header bg-primary bg-opacity-25">
-        <h5 class="mb-0">Edit Family</h5>
-    </div>
-    <div class="card-body">
-        <form method="POST" action="{{ url_for('admin.edit_family', family_id=family.id) }}">
-            {{ form.hidden_tag() }}
-            
-            <div class="mb-3">
-                <label for="name" class="form-label">{{ form.name.label }}</label>
-                {{ form.name(class="form-control", id="name", placeholder="Enter family name") }}
-                {% if form.name.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.name.errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-            
-            <div class="mb-3">
-                <label for="head_name" class="form-label">{{ form.head_name.label }}</label>
-                {{ form.head_name(class="form-control", id="head_name", placeholder="Enter head of family name") }}
-                {% if form.head_name.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.head_name.errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-            
-            <div class="mb-3">
-                <label for="contact" class="form-label">{{ form.contact.label }}</label>
-                {{ form.contact(class="form-control", id="contact", placeholder="Enter contact information") }}
-                {% if form.contact.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.contact.errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-            
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save me-2"></i>Update Family
-                </button>
-                <a href="{{ url_for('admin.families') }}" class="btn btn-secondary">
-                    <i class="fas fa-times me-2"></i>Cancel
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="card mb-4">
-    <div class="card-header bg-info bg-opacity-25">
-        <h5 class="mb-0">Family Members</h5>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Age</th>
-                        <th>Gender</th>
-                        <th>Evacuation Center</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for member in family.members %}
-                    <tr>
-                        <td>{{ member.name }}</td>
-                        <td>{{ member.age }}</td>
-                        <td>{{ member.gender.capitalize() }}</td>
-                        <td>{{ member.center.name if member.center else 'N/A' }}</td>
-                        <td>
-                            <span class="badge {% if member.status == 'active' %}bg-success{% elif member.status == 'relocated' %}bg-info{% elif member.status == 'missing' %}bg-warning{% else %}bg-danger{% endif %}">
-                                {{ member.status.capitalize() }}
-                            </span>
-                        </td>
-                        <td>
-                            <a href="{{ url_for('admin.edit_evacuee', evacuee_id=member.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-edit"></i> Edit
-                            </a>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center">No family members found.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="mt-3">
-            <a href="{{ url_for('admin.add_evacuee') }}" class="btn btn-primary">
-                <i class="fas fa-plus-circle me-2"></i>Add Member to Family
-            </a>
-        </div>
-    </div>
-</div>
-{% endif %}
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/datatables-config.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize DataTable
-        $('#familiesTable').DataTable({
-            responsive: true,
-            order: [[0, 'asc']],
-            columnDefs: [
-                { orderable: false, targets: [3, 4] }
-            ]
-        });
-    });
+    // Form validation
+    (function () {
+        'use strict';
+
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.querySelectorAll('.needs-validation');
+
+        // Loop over them and prevent submission
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+
+                    form.classList.add('was-validated');
+                }, false);
+            });
+    })();
 </script>
 {% endblock %}

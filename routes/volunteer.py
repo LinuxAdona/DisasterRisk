@@ -55,16 +55,25 @@ def dashboard():
 @login_required
 def evacuees():
     evacuees = Evacuee.query.all()
-    form = SearchForm()
+    families = Family.query.all()
+    centers = EvacuationCenter.query.all()
+    form = EvacueeForm()
     
-    if form.validate_on_submit():
-        search_term = form.query.data
+    # Populate form choices
+    form.evacuation_center_id.choices = [(c.id, c.name) for c in centers]
+    form.family_id.choices = [(0, 'None')] + [(f.id, f.family_name) for f in families]
+    
+    if request.args.get('query'):
+        search_term = request.args.get('query')
         evacuees = Evacuee.query.filter(
             Evacuee.first_name.ilike(f'%{search_term}%') | 
             Evacuee.last_name.ilike(f'%{search_term}%')
         ).all()
     
-    return render_template('volunteer/evacuees.html', evacuees=evacuees, form=form)
+    return render_template('volunteer/evacuees.html', evacuees=evacuees,
+                         families=families,
+                         centers=centers,
+                         form=form)
 
 @volunteer_bp.route('/evacuees/add', methods=['GET', 'POST'])
 @login_required
